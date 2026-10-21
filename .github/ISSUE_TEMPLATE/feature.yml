@@ -1,0 +1,49 @@
+name: Feature
+description: User-facing feature or change (storefront or admin UI)
+title: "<imperative verb + object>"
+labels: ["type:feat"]
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Business or technical value — why this issue exists.
+      placeholder: Shoppers abandon checkout because...
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: Real role (not a job title), "I", active verb + object, so that <value>.
+      placeholder: As a shopper, I can save items for later, so that I don't lose my cart.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: From the product's perspective. Include at least one negative/edge scenario.
+      value: |
+        - [ ]
+        - [ ] (negative / edge scenario)
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this issue does NOT cover — cuts the tail.
+      placeholder: "- Payment processing (handled off-platform)"
+    validations:
+      required: false
+  - type: input
+    id: owner-blocked
+    attributes:
+      label: Owner / Blocked by
+      placeholder: "Owner: Frontend Public · Blocked by: #none"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "Remember to add `priority:*` and `area:*` labels after creating the issue."
