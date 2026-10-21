@@ -85,8 +85,9 @@ Commit types map **1:1** to the `type:` labels:
 
 ## Issues
 
-- Use the templates (Story / Task). Blank issues are disabled.
-- Every issue carries three axes: `type:*` + `priority:*` + `area:*`. `status:*` is optional.
+- Use the templates (Feature / Technical). Blank issues are disabled.
+- Every issue carries three axes: `type:*` + `priority:*` + `area:*`. Progress is tracked on
+  the Project board (Todo / In progress / Done), not with labels.
 - Priority uses MoSCoW: `must` / `should` / `could` / `wont`.
 - Keep issues vertical and small (INVEST). If the text has *and/or/unless* or a generic role,
   split into several issues. The issue is a trigger for a conversation, not a full spec.
@@ -99,8 +100,8 @@ Commit types map **1:1** to the `type:` labels:
 - One issue → one branch → one PR.
 - PR title in Conventional Commits style; body must `Closes #<n>`.
 - **Squash merge** into `main` (keeps history clean; agents produce many WIP commits).
-- Add `status:needs-review`; merge only when acceptance criteria are checked and CI is green
-  (CI lands in M6).
+- Move the Project card to In progress while the PR is open; merge only when acceptance
+  criteria are checked and CI is green (CI lands in M6), then the card goes to Done.
 
 ---
 
