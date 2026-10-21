@@ -1,8 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "../db/types";
 
 // Lazy singleton: the browser client is created on first use and reused
 // afterwards, so the whole app shares one connection/auth state.
-let client: ReturnType<typeof createBrowserClient> | undefined;
+let client: ReturnType<typeof createBrowserClient<Database>> | undefined;
 
 /**
  * Returns the shared Supabase browser client.
@@ -23,6 +24,6 @@ export function getSupabaseClient() {
     );
   }
 
-  client = createBrowserClient(url, anonKey);
+  client = createBrowserClient<Database>(url, anonKey);
   return client;
 }

@@ -30,6 +30,17 @@ npx supabase link --project-ref ttmrblalbkefsbplqkkp
 `config.toml` sets `major_version = 17` to match the hosted Postgres (17.11). Keep them in
 sync: if the hosted major version changes, update `config.toml`.
 
+### Generated types
+
+`src/lib/db/types.ts` is generated from the live schema — never edit it by hand. After any
+migration, regenerate it so the browser client stays type-checked against the real DB:
+
+```
+npm run gen:types
+```
+
+This runs `supabase gen types typescript` against the linked project and overwrites the file.
+
 ---
 
 ## Areas & ownership
