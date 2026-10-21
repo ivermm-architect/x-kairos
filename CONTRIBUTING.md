@@ -15,6 +15,23 @@ comments, file/branch names, commits, issues, milestones, PRs and docs.
 
 ---
 
+## Supabase CLI
+
+The CLI is pinned as a devDependency at **`supabase@2.121.0`** — always invoke it with
+`npx supabase <cmd>` so every contributor uses the same version. `npm install` installs it.
+
+Link the local workspace to the hosted project (run once; needs your access token and the
+DB password — both are secrets, never commit them):
+
+```
+npx supabase link --project-ref ttmrblalbkefsbplqkkp
+```
+
+`config.toml` sets `major_version = 17` to match the hosted Postgres (17.11). Keep them in
+sync: if the hosted major version changes, update `config.toml`.
+
+---
+
 ## Areas & ownership
 
 Each `area:` label maps to a set of paths. Keep changes within one area per branch/PR to avoid
