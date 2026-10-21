@@ -1,0 +1,19 @@
+# Normalize line endings: store all text as LF in the repo, regardless of OS.
+* text=auto eol=lf
+
+# Binary assets — never alter.
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.svg   text eol=lf
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+
+# Lockfiles — text, keep LF, avoid merge noise.
+package-lock.json linguist-generated=true
