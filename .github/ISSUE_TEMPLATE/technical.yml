@@ -1,0 +1,48 @@
+name: Technical
+description: Backend, data, infra or tooling work (value-focused, no persona)
+title: "<imperative verb + object>"
+labels: ["type:chore"]
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Technical value — what problem this solves or risk it removes.
+      placeholder: The legacy repo drifted from the production schema, so...
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Value statement
+      description: Value-focused form (no "As a user" — this is a system/infra task).
+      placeholder: In order to have a drift-free database, the repo captures the real schema as baseline.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, testable conditions. Include an edge/failure case where relevant.
+      value: |
+        - [ ]
+        - [ ] (failure / edge case)
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      placeholder: "- Security hardening of the schema (separate milestone)"
+    validations:
+      required: false
+  - type: input
+    id: owner-blocked
+    attributes:
+      label: Owner / Blocked by
+      placeholder: "Owner: DB/Backend · Blocked by: #4"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "Remember to add `priority:*` and `area:*` labels after creating the issue."
