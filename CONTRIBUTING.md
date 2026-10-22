@@ -64,14 +64,14 @@ The shared client runtime is wired once at the root:
 Each `area:` label maps to a set of paths. Keep changes within one area per branch/PR to avoid
 collisions:
 
-| Area label               | Paths |
-|--------------------------|-------|
-| `area:db`                | `supabase/`, `src/lib/db/`, `src/lib/auth/` |
-| `area:design-system`     | `src/components/ui/`, `src/styles/` |
-| `area:admin`             | `src/app/(admin)/`, `src/components/admin/` |
-| `area:storefront`        | `src/app/(public)/`, `src/components/public/` |
+| Area label               | Paths                                                     |
+| ------------------------ | --------------------------------------------------------- |
+| `area:db`                | `supabase/`, `src/lib/db/`, `src/lib/auth/`               |
+| `area:design-system`     | `src/components/ui/`, `src/styles/`                       |
+| `area:admin`             | `src/app/(admin)/`, `src/components/admin/`               |
+| `area:storefront`        | `src/app/(public)/`, `src/components/public/`             |
 | `area:queries`           | `src/lib/queries/` (shared contract — coordinate changes) |
-| `area:ci` / `area:infra` | `.github/`, root config |
+| `area:ci` / `area:infra` | `.github/`, root config                                   |
 
 `src/lib/queries/` is the only Front↔DB contact point — changes there are coordinated.
 
@@ -110,15 +110,15 @@ The issue reference goes at the **end** of the message, keeping the commit↔iss
 
 Commit types map **1:1** to the `type:` labels:
 
-| Commit type | Label           | When to use                              |
-|-------------|-----------------|------------------------------------------|
-| `feat`      | `type:feat`     | New capability                           |
-| `fix`       | `type:fix`      | Bug fix                                   |
-| `chore`     | `type:chore`    | Tooling, config, housekeeping            |
-| `docs`      | `type:docs`     | Documentation                            |
-| `refactor`  | `type:refactor` | Code change, no behavior change          |
-| `test`      | `type:test`     | Tests                                     |
-| `security`  | `type:security` | RLS / RPC / auth hardening               |
+| Commit type | Label           | When to use                     |
+| ----------- | --------------- | ------------------------------- |
+| `feat`      | `type:feat`     | New capability                  |
+| `fix`       | `type:fix`      | Bug fix                         |
+| `chore`     | `type:chore`    | Tooling, config, housekeeping   |
+| `docs`      | `type:docs`     | Documentation                   |
+| `refactor`  | `type:refactor` | Code change, no behavior change |
+| `test`      | `type:test`     | Tests                           |
+| `security`  | `type:security` | RLS / RPC / auth hardening      |
 
 - `security` is a non-standard extension of Conventional Commits, kept because security weighs
   heavily in this project (all authorization lives in Postgres).
@@ -133,7 +133,7 @@ Commit types map **1:1** to the `type:` labels:
 - Every issue carries three axes: `type:*` + `priority:*` + `area:*`. Progress is tracked on
   the Project board (Todo / In progress / Done), not with labels.
 - Priority uses MoSCoW: `must` / `should` / `could` / `wont`.
-- Keep issues vertical and small (INVEST). If the text has *and/or/unless* or a generic role,
+- Keep issues vertical and small (INVEST). If the text has _and/or/unless_ or a generic role,
   split into several issues. The issue is a trigger for a conversation, not a full spec.
 - Record the **Owner** and **Blocked by** so dependencies are explicit.
 

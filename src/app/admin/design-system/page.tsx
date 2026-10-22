@@ -15,18 +15,7 @@ import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
-const PINK = [
-  "50",
-  "100",
-  "200",
-  "300",
-  "400",
-  "500",
-  "600",
-  "700",
-  "800",
-  "900",
-] as const;
+const PINK = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"] as const;
 const NEUTRAL = PINK;
 
 const SEMANTIC = [
@@ -66,17 +55,14 @@ const SPACING = ["1", "2", "3", "4", "5", "6", "8", "10"] as const;
 const RADIUS = ["sm", "md", "lg", "xl", "pill"] as const;
 const SHADOW = ["--shadow", "--shadow-lift", "--shadow-brand"] as const;
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-[var(--sp-4)]">
       <h2
-        style={{ fontSize: "var(--text-xl)", fontWeight: "var(--weight-semibold)" }}
+        style={{
+          fontSize: "var(--text-xl)",
+          fontWeight: "var(--weight-semibold)",
+        }}
       >
         {title}
       </h2>
@@ -95,9 +81,7 @@ function Swatch({ label, value }: { label: string; value: string }) {
           border: "1px solid var(--border)",
         }}
       />
-      <code style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
-        {label}
-      </code>
+      <code style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>{label}</code>
     </div>
   );
 }
@@ -173,7 +157,7 @@ export default function DesignSystemPage() {
                 alt="Kairos Importadora logo"
                 width={1024}
                 height={1249}
-                className="h-auto w-auto max-h-40"
+                className="h-auto max-h-40 w-auto"
                 priority
               />
             </div>
@@ -194,7 +178,7 @@ export default function DesignSystemPage() {
                 alt="Kairos monogram mark"
                 width={1024}
                 height={1024}
-                className="h-auto w-auto max-h-28"
+                className="h-auto max-h-28 w-auto"
               />
             </div>
 
@@ -214,7 +198,7 @@ export default function DesignSystemPage() {
                 alt="Kairos app icon"
                 width={512}
                 height={512}
-                className="h-auto w-auto max-h-32 rounded-[var(--radius-lg)]"
+                className="h-auto max-h-32 w-auto rounded-[var(--radius-lg)]"
               />
             </div>
           </div>
@@ -250,11 +234,7 @@ export default function DesignSystemPage() {
         <Section title="Neutral ramp">
           <div className="grid grid-cols-5 gap-[var(--sp-3)] sm:grid-cols-10">
             {NEUTRAL.map((s) => (
-              <Swatch
-                key={s}
-                label={`neutral-${s}`}
-                value={`var(--neutral-${s})`}
-              />
+              <Swatch key={s} label={`neutral-${s}`} value={`var(--neutral-${s})`} />
             ))}
           </div>
         </Section>
@@ -282,7 +262,10 @@ export default function DesignSystemPage() {
             {TYPE_SCALE.map(([token, label]) => (
               <div
                 key={token}
-                style={{ fontSize: `var(${token})`, lineHeight: "var(--leading-tight)" }}
+                style={{
+                  fontSize: `var(${token})`,
+                  lineHeight: "var(--leading-tight)",
+                }}
               >
                 {label}
               </div>
@@ -332,7 +315,10 @@ export default function DesignSystemPage() {
                   }}
                 />
                 <code
-                  style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}
+                  style={{
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                  }}
                 >
                   {r}
                 </code>
