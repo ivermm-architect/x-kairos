@@ -31,6 +31,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # ESLint ignores formatting (eslint-config-prettier), so Prettier must
+      # gate it: catches unformatted code that skipped the local pre-commit hook.
+      - name: Format check
+        run: npm run format:check
+
       # Build first: Next generates its global helper types (LayoutProps,
       # PageProps, ...) into .next/types, which the standalone type-check needs.
       - name: Build
