@@ -8,7 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "gen:types": "supabase gen types typescript --project-id ttmrblalbkefsbplqkkp --schema public > src/lib/db/types.ts"
+    "gen:types": "supabase gen types typescript --project-id ttmrblalbkefsbplqkkp --schema public > src/lib/db/types.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml,yaml,html}": "prettier --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -23,6 +31,8 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -30,6 +40,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "10.1.8",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
     "supabase": "2.121.0",
