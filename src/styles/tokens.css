@@ -1,0 +1,220 @@
+/*
+ * tokens.css — single source of truth for the x-kairos design system.
+ *
+ * Every UI value (color, type, spacing, radius, shadow, motion) lives here as a
+ * CSS custom property. Components consume `var(--token)` — never literals.
+ *
+ * Two layers:
+ *   1. Primitives  — raw ramps (pink/neutral/mint/coral/red). Not used directly.
+ *   2. Semantic    — role tokens (bg, text, primary, success…) that map to a
+ *                    primitive and flip between light and dark themes.
+ *
+ * Theme is driven by `data-theme` on <html> ("light" | "dark"); when absent we
+ * follow the OS via prefers-color-scheme.
+ */
+
+:root {
+  /* ----- Primitives — brand magenta ramp (Kairos brand) -------------------- */
+  --pink-50: #fde9f3;
+  --pink-100: #fbc9e1;
+  --pink-200: #f89bc8;
+  --pink-300: #f56fb0;
+  --pink-400: #f2479c;
+  --pink-500: #f0258c; /* brand primary */
+  --pink-600: #d11574;
+  --pink-700: #b81368;
+  --pink-800: #8f0e50;
+  --pink-900: #5e0935;
+
+  /* ----- Primitives — neutral ramp ---------------------------------------- */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8f6f8;
+  --neutral-100: #f3eff2;
+  --neutral-200: #e8eaf0;
+  --neutral-300: #d7dae3;
+  --neutral-400: #a8abb8;
+  --neutral-500: #8b8fa3;
+  --neutral-600: #565a68;
+  --neutral-700: #3a3d48;
+  --neutral-800: #232530;
+  --neutral-900: #1b1d29;
+
+  /* ----- Primitives — status ramps ---------------------------------------- */
+  --mint-50: #e7fbee;
+  --mint-300: #6fd98a;
+  --mint-400: #45c46c;
+  --mint-600: #1f9d57;
+  /* Coral/peach — the brand secondary (the logo "R"). Refined toward a softer
+     salmon so it reads elegant next to the magenta, not neon-orange. */
+  --coral-300: #ffc3a8;
+  --coral-400: #ff9f7d;
+  --coral-500: #f4855f;
+  --coral-600: #df7450;
+  --red-500: #e5484d;
+  --red-600: #c62a30;
+
+  /* ----- Typography ------------------------------------------------------- */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-2xl: 1.625rem; /* 26px */
+  --text-3xl: 2rem; /* 32px */
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.45;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ----- Spacing (4px base) ----------------------------------------------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* ----- Radius ----------------------------------------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ----- Motion ----------------------------------------------------------- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur: 0.25s;
+  --dur-slow: 0.4s;
+
+  /* ----- Interaction — mobile-first targets ------------------------------- */
+  --touch-target: 44px; /* WCAG 2.2 min pointer target */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* ======================================================================= *
+   * Semantic — LIGHT (default)                                              *
+   * ======================================================================= */
+  --bg-app: #fafafa;
+  --bg-surface: var(--neutral-0);
+  --bg-muted: #f2f2f4;
+  --border: #ececef;
+  --border-strong: #dcdce1;
+
+  --text: var(--neutral-900); /* #1b1d29 on #fafafa ≈ 15:1 (AAA) */
+  --text-muted: #6a6f7d; /* on #fafafa ≈ 4.8:1 — passes AA for normal text */
+  --text-on-brand: var(--neutral-0); /* #fff on #f0258c ≈ 3.9:1 (AA large / UI) */
+
+  --primary: var(--pink-500);
+  --primary-hover: var(--pink-600);
+  --primary-active: var(--pink-700);
+  --primary-surface: var(--pink-50);
+
+  --secondary: var(--coral-500);
+  --secondary-hover: var(--coral-600);
+  --secondary-surface: #fff2ec;
+
+  --success: var(--mint-600);
+  --success-surface: var(--mint-50);
+  --warning: var(--coral-600);
+  --warning-surface: #fff1e9;
+  --danger: var(--red-600);
+  --danger-surface: #fdecec;
+
+  --focus-ring: var(--pink-500);
+
+  --shadow: 0 1px 2px rgba(27, 29, 41, 0.04), 0 6px 16px rgba(27, 29, 41, 0.06),
+    0 14px 40px rgba(27, 29, 41, 0.05);
+  --shadow-lift: 0 2px 4px rgba(27, 29, 41, 0.05),
+    0 12px 28px rgba(27, 29, 41, 0.1), 0 24px 60px rgba(27, 29, 41, 0.08);
+  --shadow-brand: 0 8px 24px rgba(240, 37, 140, 0.32);
+}
+
+/* ========================================================================= *
+ * Semantic — DARK                                                           *
+ * ========================================================================= */
+:root[data-theme="dark"] {
+  /* Cool slate — professional blue-gray undertone, not black. Surfaces are
+     clearly stepped so the admin dashboard has depth and hierarchy. */
+  --bg-app: #0b0f16;
+  --bg-surface: #182029;
+  --bg-muted: #212b37;
+  --border: #2b3643;
+  --border-strong: #3c4a5a;
+
+  --text: #eef2f8;
+  --text-muted: #94a0b2;
+  --text-on-brand: var(--neutral-0);
+
+  --primary: var(--pink-400);
+  --primary-hover: var(--pink-300);
+  --primary-active: var(--pink-500);
+  --primary-surface: rgba(240, 37, 140, 0.15);
+
+  --secondary: var(--coral-400);
+  --secondary-hover: var(--coral-300);
+  --secondary-surface: rgba(244, 133, 95, 0.15);
+
+  --success: var(--mint-300);
+  --success-surface: rgba(111, 217, 138, 0.13);
+  --warning: var(--coral-300);
+  --warning-surface: rgba(242, 114, 47, 0.15);
+  --danger: #ff6166;
+  --danger-surface: rgba(229, 72, 77, 0.15);
+
+  --focus-ring: var(--pink-300);
+
+  --shadow: 0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4),
+    0 14px 40px rgba(3, 7, 14, 0.35);
+  --shadow-lift: 0 2px 4px rgba(3, 7, 14, 0.55),
+    0 12px 28px rgba(3, 7, 14, 0.5), 0 24px 60px rgba(3, 7, 14, 0.45);
+  --shadow-brand: 0 8px 28px rgba(240, 37, 140, 0.4);
+}
+
+/* Follow the OS when no explicit theme is set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-app: #0f141c;
+    --bg-surface: #182029;
+    --bg-muted: #212b37;
+    --border: #2b3643;
+    --border-strong: #3c4a5a;
+
+    --text: #eef2f8;
+    --text-muted: #94a0b2;
+    --text-on-brand: var(--neutral-0);
+
+    --primary: var(--pink-400);
+    --primary-hover: var(--pink-300);
+    --primary-active: var(--pink-500);
+    --primary-surface: rgba(240, 37, 140, 0.15);
+
+    --secondary: var(--coral-400);
+    --secondary-hover: var(--coral-300);
+    --secondary-surface: rgba(244, 133, 95, 0.15);
+
+    --success: var(--mint-300);
+    --success-surface: rgba(111, 217, 138, 0.13);
+    --warning: var(--coral-300);
+    --warning-surface: rgba(242, 114, 47, 0.15);
+    --danger: #ff6166;
+    --danger-surface: rgba(229, 72, 77, 0.15);
+
+    --focus-ring: var(--pink-300);
+
+    --shadow: 0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4),
+      0 14px 40px rgba(3, 7, 14, 0.35);
+    --shadow-lift: 0 2px 4px rgba(3, 7, 14, 0.55),
+      0 12px 28px rgba(3, 7, 14, 0.5), 0 24px 60px rgba(3, 7, 14, 0.45);
+    --shadow-brand: 0 8px 28px rgba(240, 37, 140, 0.4);
+  }
+}
