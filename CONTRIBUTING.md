@@ -43,6 +43,22 @@ This runs `supabase gen types typescript` against the linked project and overwri
 
 ---
 
+## Client runtime & providers
+
+The shared client runtime is wired once at the root:
+
+- **`src/app/providers.tsx`** — a client component holding the app-wide
+  providers. Mounted in `src/app/layout.tsx` around `children`. Add new global
+  client providers here, not scattered across pages.
+- **React Query** — the `QueryClientProvider` lives in `providers.tsx`; the
+  `QueryClient` is created lazily in state so it is never shared across requests.
+  Data hooks go under `src/lib/queries/` (the only Front↔DB contact point).
+- **Zustand** — global UI state lives in `src/lib/store/` (see `ui.ts`).
+  Subscribe via selectors so consumers re-render narrowly.
+- **Forms** — use `react-hook-form` with `zod` via `@hookform/resolvers/zod`.
+
+---
+
 ## Areas & ownership
 
 Each `area:` label maps to a set of paths. Keep changes within one area per branch/PR to avoid
