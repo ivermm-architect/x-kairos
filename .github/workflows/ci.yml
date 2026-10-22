@@ -31,8 +31,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Type-check
-        run: npx tsc --noEmit
-
+      # Build first: Next generates its global helper types (LayoutProps,
+      # PageProps, ...) into .next/types, which the standalone type-check needs.
       - name: Build
         run: npm run build
+
+      - name: Type-check
+        run: npx tsc --noEmit
