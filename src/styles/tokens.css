@@ -54,8 +54,7 @@
   --red-600: #c62a30;
 
   /* ----- Typography ------------------------------------------------------- */
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
-    roboto, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", roboto, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
 
   --text-xs: 0.75rem; /* 12px */
@@ -132,10 +131,12 @@
 
   --focus-ring: var(--pink-500);
 
-  --shadow: 0 1px 2px rgba(27, 29, 41, 0.04), 0 6px 16px rgba(27, 29, 41, 0.06),
+  --shadow:
+    0 1px 2px rgba(27, 29, 41, 0.04), 0 6px 16px rgba(27, 29, 41, 0.06),
     0 14px 40px rgba(27, 29, 41, 0.05);
-  --shadow-lift: 0 2px 4px rgba(27, 29, 41, 0.05),
-    0 12px 28px rgba(27, 29, 41, 0.1), 0 24px 60px rgba(27, 29, 41, 0.08);
+  --shadow-lift:
+    0 2px 4px rgba(27, 29, 41, 0.05), 0 12px 28px rgba(27, 29, 41, 0.1),
+    0 24px 60px rgba(27, 29, 41, 0.08);
   --shadow-brand: 0 8px 24px rgba(240, 37, 140, 0.32);
 }
 
@@ -173,10 +174,11 @@
 
   --focus-ring: var(--pink-300);
 
-  --shadow: 0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4),
-    0 14px 40px rgba(3, 7, 14, 0.35);
-  --shadow-lift: 0 2px 4px rgba(3, 7, 14, 0.55),
-    0 12px 28px rgba(3, 7, 14, 0.5), 0 24px 60px rgba(3, 7, 14, 0.45);
+  --shadow:
+    0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4), 0 14px 40px rgba(3, 7, 14, 0.35);
+  --shadow-lift:
+    0 2px 4px rgba(3, 7, 14, 0.55), 0 12px 28px rgba(3, 7, 14, 0.5),
+    0 24px 60px rgba(3, 7, 14, 0.45);
   --shadow-brand: 0 8px 28px rgba(240, 37, 140, 0.4);
 }
 
@@ -211,10 +213,12 @@
 
     --focus-ring: var(--pink-300);
 
-    --shadow: 0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4),
+    --shadow:
+      0 1px 2px rgba(3, 7, 14, 0.55), 0 6px 16px rgba(3, 7, 14, 0.4),
       0 14px 40px rgba(3, 7, 14, 0.35);
-    --shadow-lift: 0 2px 4px rgba(3, 7, 14, 0.55),
-      0 12px 28px rgba(3, 7, 14, 0.5), 0 24px 60px rgba(3, 7, 14, 0.45);
+    --shadow-lift:
+      0 2px 4px rgba(3, 7, 14, 0.55), 0 12px 28px rgba(3, 7, 14, 0.5),
+      0 24px 60px rgba(3, 7, 14, 0.45);
     --shadow-brand: 0 8px 28px rgba(240, 37, 140, 0.4);
   }
 }

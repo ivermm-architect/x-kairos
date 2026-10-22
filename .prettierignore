@@ -1,0 +1,9 @@
+# Build output and dependencies
+out/
+.next/
+node_modules/
+
+# Generated — never hand-format
+src/lib/db/types.ts
+package-lock.json
+docs/er-viewer/schema.js
