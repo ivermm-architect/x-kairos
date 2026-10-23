@@ -44,9 +44,12 @@ export type Database = {
       cash_movements: {
         Row: {
           amount: number
+          amount_base: number | null
           created_at: string
           created_by: string
+          currency: string
           description: string | null
+          exchange_rate: number | null
           expense_category: string | null
           id: string
           movement_type: string
@@ -56,9 +59,12 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_base?: number | null
           created_at?: string
           created_by: string
+          currency?: string
           description?: string | null
+          exchange_rate?: number | null
           expense_category?: string | null
           id?: string
           movement_type: string
@@ -68,9 +74,12 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_base?: number | null
           created_at?: string
           created_by?: string
+          currency?: string
           description?: string | null
+          exchange_rate?: number | null
           expense_category?: string | null
           id?: string
           movement_type?: string
@@ -85,6 +94,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_movements_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "cash_movements_session_id_fkey"
@@ -383,6 +399,78 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      currencies: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          is_base: boolean
+          name: string
+          sort_order: number
+          symbol: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          is_base?: boolean
+          name: string
+          sort_order?: number
+          symbol: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          is_base?: boolean
+          name?: string
+          sort_order?: number
+          symbol?: string
+        }
+        Relationships: []
+      }
+      exchange_rates: {
+        Row: {
+          created_at: string
+          effective_date: string
+          from_currency: string
+          id: string
+          rate: number
+          to_currency: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date?: string
+          from_currency: string
+          id?: string
+          rate: number
+          to_currency: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          from_currency?: string
+          id?: string
+          rate?: number
+          to_currency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_from_currency_fkey"
+            columns: ["from_currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "exchange_rates_to_currency_fkey"
+            columns: ["to_currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -705,7 +793,9 @@ export type Database = {
           product_unit_id: string | null
           quantity: number
           quotation_id: string
+          source_currency: string | null
           source_lot_id: string | null
+          source_rate: number | null
           subtotal: number
           tier_label: string | null
           tier_min_quantity: number | null
@@ -723,7 +813,9 @@ export type Database = {
           product_unit_id?: string | null
           quantity: number
           quotation_id: string
+          source_currency?: string | null
           source_lot_id?: string | null
+          source_rate?: number | null
           subtotal?: number
           tier_label?: string | null
           tier_min_quantity?: number | null
@@ -741,7 +833,9 @@ export type Database = {
           product_unit_id?: string | null
           quantity?: number
           quotation_id?: string
+          source_currency?: string | null
           source_lot_id?: string | null
+          source_rate?: number | null
           subtotal?: number
           tier_label?: string | null
           tier_min_quantity?: number | null
@@ -772,6 +866,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quotation_items_source_currency_fkey"
+            columns: ["source_currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          },
+          {
             foreignKeyName: "quotation_items_source_lot_id_fkey"
             columns: ["source_lot_id"]
             isOneToOne: false
@@ -795,7 +896,9 @@ export type Database = {
           converted_sale_id: string | null
           created_at: string
           created_by: string
+          currency: string
           discount_amount: number
+          exchange_rate: number | null
           id: string
           quotation_number: string
           status: string
@@ -813,7 +916,9 @@ export type Database = {
           converted_sale_id?: string | null
           created_at?: string
           created_by: string
+          currency?: string
           discount_amount?: number
+          exchange_rate?: number | null
           id?: string
           quotation_number: string
           status?: string
@@ -831,7 +936,9 @@ export type Database = {
           converted_sale_id?: string | null
           created_at?: string
           created_by?: string
+          currency?: string
           discount_amount?: number
+          exchange_rate?: number | null
           id?: string
           quotation_number?: string
           status?: string
@@ -863,6 +970,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -969,6 +1083,8 @@ export type Database = {
           cash_session_id: string | null
           client_id: string | null
           created_at: string
+          currency: string
+          exchange_rate: number | null
           id: string
           processed_by: string | null
           reason: string
@@ -977,6 +1093,7 @@ export type Database = {
           sale_id: string
           status: string
           total_amount: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -985,6 +1102,8 @@ export type Database = {
           cash_session_id?: string | null
           client_id?: string | null
           created_at?: string
+          currency?: string
+          exchange_rate?: number | null
           id?: string
           processed_by?: string | null
           reason: string
@@ -993,6 +1112,7 @@ export type Database = {
           sale_id: string
           status?: string
           total_amount?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id: string
         }
@@ -1001,6 +1121,8 @@ export type Database = {
           cash_session_id?: string | null
           client_id?: string | null
           created_at?: string
+          currency?: string
+          exchange_rate?: number | null
           id?: string
           processed_by?: string | null
           reason?: string
@@ -1009,6 +1131,7 @@ export type Database = {
           sale_id?: string
           status?: string
           total_amount?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id?: string
         }
@@ -1033,6 +1156,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "returns_processed_by_fkey"
@@ -1175,6 +1305,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          currency: string
           id: string
           payment_method: string
           sale_id: string
@@ -1182,6 +1313,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          currency?: string
           id?: string
           payment_method: string
           sale_id: string
@@ -1189,11 +1321,19 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          currency?: string
           id?: string
           payment_method?: string
           sale_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sale_payments_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "sale_payments_sale_id_fkey"
             columns: ["sale_id"]
@@ -1218,9 +1358,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -1232,9 +1374,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -1252,9 +1396,11 @@ export type Database = {
           created_at?: string
           credit_due_date?: string | null
           credit_status?: string | null
+          currency?: string
           delivery_notes?: string | null
           discount_amount?: number
           discount_percent?: number
+          exchange_rate?: number | null
           id?: string
           notes?: string | null
           payment_method?: string
@@ -1266,9 +1412,11 @@ export type Database = {
           sold_by: string
           status?: string
           subtotal?: number
+          subtotal_base?: number | null
           tax_amount?: number
           tax_rate?: number
           total?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id: string
         }
@@ -1286,9 +1434,11 @@ export type Database = {
           created_at?: string
           credit_due_date?: string | null
           credit_status?: string | null
+          currency?: string
           delivery_notes?: string | null
           discount_amount?: number
           discount_percent?: number
+          exchange_rate?: number | null
           id?: string
           notes?: string | null
           payment_method?: string
@@ -1300,9 +1450,11 @@ export type Database = {
           sold_by?: string
           status?: string
           subtotal?: number
+          subtotal_base?: number | null
           tax_amount?: number
           tax_rate?: number
           total?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id?: string
         }
@@ -1327,6 +1479,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "sales_quotation_id_fkey"
@@ -1991,6 +2150,7 @@ export type Database = {
           subtotal: number
           unit_name: string
           unit_price: number
+          unit_price_base: number | null
         }
         Insert: {
           created_at?: string
@@ -2002,6 +2162,7 @@ export type Database = {
           subtotal?: number
           unit_name?: string
           unit_price: number
+          unit_price_base?: number | null
         }
         Update: {
           created_at?: string
@@ -2013,6 +2174,7 @@ export type Database = {
           subtotal?: number
           unit_name?: string
           unit_price?: number
+          unit_price_base?: number | null
         }
         Relationships: [
           {
@@ -2044,7 +2206,9 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          currency: string
           delivery_notes: string | null
+          exchange_rate: number | null
           id: string
           idempotency_key: string | null
           notes: string | null
@@ -2053,6 +2217,7 @@ export type Database = {
           status: string
           subtotal: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string | null
           web_customer_id: string | null
@@ -2062,7 +2227,9 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          currency?: string
           delivery_notes?: string | null
+          exchange_rate?: number | null
           id?: string
           idempotency_key?: string | null
           notes?: string | null
@@ -2071,6 +2238,7 @@ export type Database = {
           status?: string
           subtotal?: number
           total?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id?: string | null
           web_customer_id?: string | null
@@ -2080,7 +2248,9 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          currency?: string
           delivery_notes?: string | null
+          exchange_rate?: number | null
           id?: string
           idempotency_key?: string | null
           notes?: string | null
@@ -2089,6 +2259,7 @@ export type Database = {
           status?: string
           subtotal?: number
           total?: number
+          total_base?: number | null
           updated_at?: string
           warehouse_id?: string | null
           web_customer_id?: string | null
@@ -2100,6 +2271,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_orders_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "web_orders_sale_id_fkey"
@@ -2141,6 +2319,7 @@ export type Database = {
       add_cash_movement: {
         Args: {
           p_amount: number
+          p_currency?: string
           p_description?: string
           p_expense_category?: string
           p_movement_type: string
@@ -2150,9 +2329,12 @@ export type Database = {
         }
         Returns: {
           amount: number
+          amount_base: number | null
           created_at: string
           created_by: string
+          currency: string
           description: string | null
+          exchange_rate: number | null
           expense_category: string | null
           id: string
           movement_type: string
@@ -2223,9 +2405,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2237,9 +2421,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2271,9 +2457,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2285,9 +2473,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2334,7 +2524,9 @@ export type Database = {
           converted_sale_id: string | null
           created_at: string
           created_by: string
+          currency: string
           discount_amount: number
+          exchange_rate: number | null
           id: string
           quotation_number: string
           status: string
@@ -2356,6 +2548,7 @@ export type Database = {
         Args: {
           p_contact_name: string
           p_contact_phone: string
+          p_currency?: string
           p_delivery_notes: string
           p_idempotency_key?: string
           p_lines: Json
@@ -2366,7 +2559,9 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          currency: string
           delivery_notes: string | null
+          exchange_rate: number | null
           id: string
           idempotency_key: string | null
           notes: string | null
@@ -2375,6 +2570,7 @@ export type Database = {
           status: string
           subtotal: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string | null
           web_customer_id: string | null
@@ -2402,9 +2598,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2416,9 +2614,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2428,6 +2628,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fn_rate: {
+        Args: { p_currency: string; p_date?: string }
+        Returns: number
+      }
+      fn_to_base: {
+        Args: { p_amount: number; p_currency: string; p_date?: string }
+        Returns: number
       }
       has_role: { Args: { role_key: string }; Returns: boolean }
       is_active_staff: { Args: never; Returns: boolean }
@@ -2490,9 +2698,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2504,9 +2714,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2531,6 +2743,8 @@ export type Database = {
           cash_session_id: string | null
           client_id: string | null
           created_at: string
+          currency: string
+          exchange_rate: number | null
           id: string
           processed_by: string | null
           reason: string
@@ -2539,6 +2753,7 @@ export type Database = {
           sale_id: string
           status: string
           total_amount: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2556,6 +2771,7 @@ export type Database = {
           p_cash_session_id?: string
           p_client_id?: string
           p_credit_due_date?: string
+          p_currency?: string
           p_discount_amount?: number
           p_items: Json
           p_notes?: string
@@ -2580,9 +2796,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2594,9 +2812,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
@@ -2614,7 +2834,9 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          currency: string
           delivery_notes: string | null
+          exchange_rate: number | null
           id: string
           idempotency_key: string | null
           notes: string | null
@@ -2623,6 +2845,7 @@ export type Database = {
           status: string
           subtotal: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string | null
           web_customer_id: string | null
@@ -2650,9 +2873,11 @@ export type Database = {
           created_at: string
           credit_due_date: string | null
           credit_status: string | null
+          currency: string
           delivery_notes: string | null
           discount_amount: number
           discount_percent: number
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string
@@ -2664,9 +2889,11 @@ export type Database = {
           sold_by: string
           status: string
           subtotal: number
+          subtotal_base: number | null
           tax_amount: number
           tax_rate: number
           total: number
+          total_base: number | null
           updated_at: string
           warehouse_id: string
         }
