@@ -6,8 +6,9 @@ import { useAuth } from "@/lib/auth/context";
 
 /**
  * Gates the admin area on the client (static export: no middleware, no server
- * redirects). No session → /login. Signed in but not staff → public home.
- * This is a UI barrier; the real data security is RLS/RPC in Postgres.
+ * redirects). No session → /login. Signed in but not staff → public storefront
+ * (/shop), never back to the admin root (which would loop). This is a UI
+ * barrier; the real data security is RLS/RPC in Postgres.
  */
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { session, isStaff, loading } = useAuth();
@@ -19,7 +20,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       router.replace("/login");
       return;
     }
-    if (!isStaff) router.replace("/");
+    if (!isStaff) router.replace("/shop");
   }, [loading, session, isStaff, router]);
 
   if (loading || !session || !isStaff) {
