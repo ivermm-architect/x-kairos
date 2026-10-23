@@ -655,14 +655,43 @@
           detailEl.innerHTML = html;
         }
 
-        // Click a table: highlight it + direct relations, fade the rest, fill panel.
-        cy.on("tap", "node:childless", function (evt) {
+        function renderBlockDetail(parent) {
+          var kids = parent.children();
+          var html = "<h2>" + esc(parent.data("label")) + "</h2>";
+          html += '<div class="sub">' + kids.length + " tables</div>";
+          html += "<h3>Tables</h3>";
+          kids
+            .map(function (k) {
+              return k.id();
+            })
+            .sort()
+            .forEach(function (id) {
+              html += '<div class="rel"><code>' + esc(id) + "</code></div>";
+            });
+          detailEl.innerHTML = html;
+        }
+
+        // Tap a table: highlight it + its direct relations and fill the panel.
+        // Tap a phase block: highlight every table in it + their relations.
+        cy.on("tap", "node", function (evt) {
           var n = evt.target;
-          var hood = n.closedNeighborhood();
           cy.elements().addClass("faded");
-          hood.removeClass("faded");
-          hood.edges().addClass("highlight");
-          renderDetail(n.id());
+          if (n.data("isPhase")) {
+            var hood = n.children();
+            n.children().forEach(function (k) {
+              hood = hood.union(k.closedNeighborhood());
+            });
+            hood.removeClass("faded");
+            hood.edges().addClass("highlight");
+            n.removeClass("faded");
+            renderBlockDetail(n);
+          } else {
+            var nb = n.closedNeighborhood();
+            nb.removeClass("faded");
+            nb.edges().addClass("highlight");
+            n.parent().removeClass("faded");
+            renderDetail(n.id());
+          }
         });
         cy.on("tap", function (evt) {
           if (evt.target === cy) {
