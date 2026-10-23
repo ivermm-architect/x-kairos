@@ -278,6 +278,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           updated_at: string
+          web_customer_id: string | null
         }
         Insert: {
           address?: string | null
@@ -294,6 +295,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           updated_at?: string
+          web_customer_id?: string | null
         }
         Update: {
           address?: string | null
@@ -310,8 +312,17 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           updated_at?: string
+          web_customer_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_web_customer_id_fkey"
+            columns: ["web_customer_id"]
+            isOneToOne: false
+            referencedRelation: "web_customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_payments: {
         Row: {
@@ -1922,6 +1933,197 @@ export type Database = {
           },
         ]
       }
+      web_customers: {
+        Row: {
+          auth_id: string | null
+          avatar_url: string | null
+          client_id: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          auth_id?: string | null
+          avatar_url?: string | null
+          client_id?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auth_id?: string | null
+          avatar_url?: string | null
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_customers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      web_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string
+          product_unit_id: string | null
+          quantity: number
+          subtotal: number
+          unit_name: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          product_id: string
+          product_unit_id?: string | null
+          quantity: number
+          subtotal?: number
+          unit_name?: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_unit_id?: string | null
+          quantity?: number
+          subtotal?: number
+          unit_name?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "web_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_order_items_product_unit_id_fkey"
+            columns: ["product_unit_id"]
+            isOneToOne: false
+            referencedRelation: "product_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      web_orders: {
+        Row: {
+          client_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          delivery_notes: string | null
+          id: string
+          idempotency_key: string | null
+          notes: string | null
+          order_number: string
+          sale_id: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          warehouse_id: string | null
+          web_customer_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          delivery_notes?: string | null
+          id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          order_number: string
+          sale_id?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          warehouse_id?: string | null
+          web_customer_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          delivery_notes?: string | null
+          id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          order_number?: string
+          sale_id?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          warehouse_id?: string | null
+          web_customer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "web_orders_web_customer_id_fkey"
+            columns: ["web_customer_id"]
+            isOneToOne: false
+            referencedRelation: "web_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2048,6 +2250,54 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      convert_web_order_to_sale: {
+        Args: {
+          p_cash_session_id?: string
+          p_id: string
+          p_payment_method?: string
+          p_warehouse_id: string
+        }
+        Returns: {
+          advance_amount: number
+          amount_paid: number
+          amount_pending: number
+          balance_due: number
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cash_session_id: string | null
+          change_amount: number
+          client_id: string | null
+          created_at: string
+          credit_due_date: string | null
+          credit_status: string | null
+          delivery_notes: string | null
+          discount_amount: number
+          discount_percent: number
+          id: string
+          notes: string | null
+          payment_method: string
+          quotation_id: string | null
+          sale_mode: string
+          sale_number: string
+          sale_type: string
+          shipping_date: string | null
+          sold_by: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          tax_rate: number
+          total: number
+          updated_at: string
+          warehouse_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_cash_register: {
         Args: { p_name: string; p_warehouse_id: string }
         Returns: {
@@ -2098,6 +2348,40 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "quotations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_web_order: {
+        Args: {
+          p_contact_name: string
+          p_contact_phone: string
+          p_delivery_notes: string
+          p_idempotency_key?: string
+          p_lines: Json
+          p_web_customer_id?: string
+        }
+        Returns: {
+          client_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          delivery_notes: string | null
+          id: string
+          idempotency_key: string | null
+          notes: string | null
+          order_number: string
+          sale_id: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          warehouse_id: string | null
+          web_customer_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "web_orders"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2175,6 +2459,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      public_warehouses: {
+        Args: never
+        Returns: {
+          address: string
+          city: string
+          name: string
+          phone: string
+        }[]
       }
       register_credit_payment: {
         Args: {
@@ -2310,6 +2603,33 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_web_order_status: {
+        Args: { p_id: string; p_status: string }
+        Returns: {
+          client_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          delivery_notes: string | null
+          id: string
+          idempotency_key: string | null
+          notes: string | null
+          order_number: string
+          sale_id: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          warehouse_id: string | null
+          web_customer_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "web_orders"
           isOneToOne: true
           isSetofReturn: false
         }

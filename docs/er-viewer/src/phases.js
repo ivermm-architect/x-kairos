@@ -46,6 +46,9 @@
     quotation_items: 3,
     returns: 3,
     return_items: 3,
+    web_customers: 5,
+    web_orders: 5,
+    web_order_items: 5,
   };
 
   ERV.UNASSIGNED = { milestone: "—", label: "Unassigned", color: "#8b949e" };

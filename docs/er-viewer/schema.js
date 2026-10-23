@@ -1,9 +1,9 @@
-// PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply.
+// PROPOSAL — phases 0-5 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web), pending apply.
 // NOT generated from the live DB yet. After the migrations land, regenerate
 // this file from the real database with introspect.sql (see README.md).
 // Descriptions come from COMMENT ON TABLE/COLUMN once the schema exists.
 window.__SCHEMA__ = {
-  "generated_at": "PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply",
+  "generated_at": "PROPOSAL — phases 0-5 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web), pending apply",
   "tables": [
     {
       "name": "staff",
@@ -313,6 +313,7 @@ window.__SCHEMA__ = {
         { "name": "city", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "City." },
         { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form notes." },
         { "name": "is_active", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Soft-delete flag." },
+        { "name": "web_customer_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Storefront account this client was created from or matched to; SET NULL. Added in 0006." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
         { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
       ]
@@ -540,6 +541,59 @@ window.__SCHEMA__ = {
         { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Line notes." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
       ]
+    },
+    {
+      "name": "web_customers",
+      "description": "Storefront accounts. auth_id ties to a Supabase Auth user; client_id unifies the account with its back-office clients row.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "auth_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Unique FK to auth.users; SET NULL." },
+        { "name": "email", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Account email." },
+        { "name": "full_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Account name." },
+        { "name": "phone", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Contact phone." },
+        { "name": "avatar_url", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Avatar image URL." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Back-office client; SET NULL." },
+        { "name": "is_active", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Soft-delete flag." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "web_orders",
+      "description": "Storefront orders (guest or logged-in). Converts to a POS sale via convert_web_order_to_sale; sale_id links the two.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "order_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (WEB-YYYYMMDD-#####)." },
+        { "name": "web_customer_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Account; nullable for guest checkout; SET NULL." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Resolved back-office client; SET NULL." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Fulfilling warehouse, set on conversion; SET NULL." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Sum of line subtotals." },
+        { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Order total." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "pending | confirmed | preparing | ready | delivered | cancelled." },
+        { "name": "sale_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Linked POS sale; SET NULL." },
+        { "name": "contact_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Guest contact name." },
+        { "name": "contact_phone", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Guest contact phone." },
+        { "name": "delivery_notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Delivery notes." },
+        { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form notes." },
+        { "name": "idempotency_key", "type": "uuid", "nullable": true, "pk": false, "fk": false, "description": "Unique when present; dedupes retried submissions." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "web_order_items",
+      "description": "Order lines. unit_price is fetched server-side from the catalog, never trusted from the client.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "order_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to web_orders; CASCADE." },
+        { "name": "product_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Product ordered; RESTRICT." },
+        { "name": "product_unit_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Selling unit; SET NULL." },
+        { "name": "quantity", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Quantity; > 0." },
+        { "name": "unit_name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Selling unit label." },
+        { "name": "unit_price", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Server-priced unit price; >= 0." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
     }
   ],
   "relations": [
@@ -621,6 +675,15 @@ window.__SCHEMA__ = {
     { "source_table": "return_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
     { "source_table": "return_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" },
     { "source_table": "return_items", "source_column": "source_lot_item_id", "target_table": "stock_entry_items", "target_column": "id" },
-    { "source_table": "return_items", "source_column": "location_id", "target_table": "warehouse_locations", "target_column": "id" }
+    { "source_table": "return_items", "source_column": "location_id", "target_table": "warehouse_locations", "target_column": "id" },
+    { "source_table": "clients", "source_column": "web_customer_id", "target_table": "web_customers", "target_column": "id" },
+    { "source_table": "web_customers", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "web_orders", "source_column": "web_customer_id", "target_table": "web_customers", "target_column": "id" },
+    { "source_table": "web_orders", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "web_orders", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "web_orders", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "web_order_items", "source_column": "order_id", "target_table": "web_orders", "target_column": "id" },
+    { "source_table": "web_order_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
+    { "source_table": "web_order_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" }
   ]
 };
