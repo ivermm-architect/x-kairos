@@ -1,9 +1,9 @@
-// PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply.
+// PROPOSAL — phases 0-6 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency), pending apply.
 // NOT generated from the live DB yet. After the migrations land, regenerate
 // this file from the real database with introspect.sql (see README.md).
 // Descriptions come from COMMENT ON TABLE/COLUMN once the schema exists.
 window.__SCHEMA__ = {
-  "generated_at": "PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply",
+  "generated_at": "PROPOSAL — phases 0-6 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency), pending apply",
   "tables": [
     {
       "name": "staff",
@@ -368,6 +368,8 @@ window.__SCHEMA__ = {
         { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Header discount." },
         { "name": "tax_rate", "type": "numeric(6,4)", "nullable": false, "pk": false, "fk": false, "description": "Tax rate applied." },
         { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "subtotal - discount + tax." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Denomination currency; FK to currencies.code; default BOB." },
+        { "name": "exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate frozen at quote time (base per unit)." },
         { "name": "terms_conditions", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Terms text." },
         { "name": "valid_until", "type": "date", "nullable": true, "pk": false, "fk": false, "description": "Expiry date." },
         { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "draft | sent | accepted | converted | expired | cancelled." },
@@ -395,6 +397,10 @@ window.__SCHEMA__ = {
         { "name": "tax_rate", "type": "numeric(6,4)", "nullable": false, "pk": false, "fk": false, "description": "Tax rate applied." },
         { "name": "tax_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Computed tax." },
         { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Final total." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Denomination currency; FK to currencies.code; default BOB." },
+        { "name": "exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate frozen at sale time (base per unit); set by trigger." },
+        { "name": "subtotal_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "subtotal in base currency; set by trigger." },
+        { "name": "total_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "total in base currency; drives cash reconciliation." },
         { "name": "payment_method", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "cash | qr | credit." },
         { "name": "amount_paid", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Paid so far." },
         { "name": "amount_pending", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Outstanding (credit)." },
@@ -446,6 +452,7 @@ window.__SCHEMA__ = {
         { "name": "sale_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to sales; CASCADE." },
         { "name": "payment_method", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "cash | qr | credit." },
         { "name": "amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Tendered amount; > 0." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Tender currency; FK to currencies.code; default BOB." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
       ]
     },
@@ -471,6 +478,9 @@ window.__SCHEMA__ = {
         { "name": "session_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to cash_sessions; CASCADE." },
         { "name": "movement_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "sale_cash | sale_qr | credit_payment | expense | withdrawal | deposit | refund_cash." },
         { "name": "amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Amount; > 0." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Movement currency; FK to currencies.code; default BOB." },
+        { "name": "exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate frozen at post time (base per unit); set by trigger." },
+        { "name": "amount_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "Amount in base currency; the drawer reconciles on this column only." },
         { "name": "description", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form description." },
         { "name": "expense_category", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Category when expense." },
         { "name": "reference_type", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Source document type." },
@@ -496,6 +506,8 @@ window.__SCHEMA__ = {
         { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line discount." },
         { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
         { "name": "source_lot_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Reference FIFO lot; SET NULL." },
+        { "name": "source_currency", "type": "text", "nullable": true, "pk": false, "fk": true, "description": "Currency the line price was captured in; FK to currencies.code." },
+        { "name": "source_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate captured with the line price (base per unit)." },
         { "name": "tier_label", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Applied price tier label." },
         { "name": "tier_min_quantity", "type": "numeric(16,4)", "nullable": true, "pk": false, "fk": false, "description": "Tier minimum quantity." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
@@ -511,6 +523,9 @@ window.__SCHEMA__ = {
         { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "FK to clients; SET NULL." },
         { "name": "warehouse_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Receiving warehouse; RESTRICT." },
         { "name": "total_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Refunded/credited total." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Denomination currency (inherited from the sale); FK to currencies.code; default BOB." },
+        { "name": "exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate inherited from the original sale (base per unit); set by trigger." },
+        { "name": "total_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "total_amount in base currency; set by trigger." },
         { "name": "resolution_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "refund_cash | refund_qr | exchange." },
         { "name": "reason", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Return reason." },
         { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "pending | approved | rejected | completed." },
@@ -568,7 +583,10 @@ window.__SCHEMA__ = {
         { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Resolved back-office client; SET NULL." },
         { "name": "warehouse_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Fulfilling warehouse, set on conversion; SET NULL." },
         { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Sum of line subtotals." },
-        { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Order total." },
+        { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Order total in the order currency." },
+        { "name": "currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Order currency; FK to currencies.code; default BOB." },
+        { "name": "exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Rate frozen at order time (base per unit)." },
+        { "name": "total_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "Order total in base currency (D4)." },
         { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "pending | confirmed | preparing | ready | delivered | cancelled." },
         { "name": "sale_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Linked POS sale; SET NULL." },
         { "name": "contact_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Guest contact name." },
@@ -590,8 +608,34 @@ window.__SCHEMA__ = {
         { "name": "product_unit_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Selling unit; SET NULL." },
         { "name": "quantity", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Quantity; > 0." },
         { "name": "unit_name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Selling unit label." },
-        { "name": "unit_price", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Server-priced unit price; >= 0." },
-        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
+        { "name": "unit_price", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Server-priced unit price in the order currency; >= 0." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal in the order currency." },
+        { "name": "unit_price_base", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "Catalog (base-currency) unit price; unit_price is the order-currency figure." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "currencies",
+      "description": "Currency catalog. Exactly one row is the base (is_base) that all reconciliation resolves to.",
+      "columns": [
+        { "name": "code", "type": "text", "nullable": false, "pk": true, "fk": false, "description": "ISO-ish 3-letter code (primary key); e.g. BOB, USD, ARS." },
+        { "name": "name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Display name." },
+        { "name": "symbol", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Display symbol (Bs, US$, $)." },
+        { "name": "is_base", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "The single base currency; fn_rate returns 1 for it. Unique via currencies_one_base_idx." },
+        { "name": "is_active", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Selectable in the UI." },
+        { "name": "sort_order", "type": "integer", "nullable": false, "pk": false, "fk": false, "description": "Display order." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "exchange_rates",
+      "description": "Dated conversion rates: rate base units per 1 unit of from_currency. fn_rate picks the latest effective_date <= the document date.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "from_currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Source currency; FK to currencies.code." },
+        { "name": "to_currency", "type": "text", "nullable": false, "pk": false, "fk": true, "description": "Target (base) currency; FK to currencies.code." },
+        { "name": "rate", "type": "numeric(18,6)", "nullable": false, "pk": false, "fk": false, "description": "Base units per 1 from_currency unit; > 0." },
+        { "name": "effective_date", "type": "date", "nullable": false, "pk": false, "fk": false, "description": "Date the rate applies from; unique per (from,to,date)." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
       ]
     }
@@ -684,6 +728,15 @@ window.__SCHEMA__ = {
     { "source_table": "web_orders", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
     { "source_table": "web_order_items", "source_column": "order_id", "target_table": "web_orders", "target_column": "id" },
     { "source_table": "web_order_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
-    { "source_table": "web_order_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" }
+    { "source_table": "web_order_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" },
+    { "source_table": "exchange_rates", "source_column": "from_currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "exchange_rates", "source_column": "to_currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "sales", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "sale_payments", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "cash_movements", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "quotations", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "quotation_items", "source_column": "source_currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "returns", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "web_orders", "source_column": "currency", "target_table": "currencies", "target_column": "code" }
   ]
 };
