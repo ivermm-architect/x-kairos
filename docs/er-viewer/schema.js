@@ -1,9 +1,9 @@
-// PROPOSAL — phases 1-2 (Foundation + Catalog + Inventory), pending apply.
+// PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply.
 // NOT generated from the live DB yet. After the migrations land, regenerate
 // this file from the real database with introspect.sql (see README.md).
 // Descriptions come from COMMENT ON TABLE/COLUMN once the schema exists.
 window.__SCHEMA__ = {
-  "generated_at": "PROPOSAL — phases 1-2 (Foundation + Catalog + Inventory), pending apply",
+  "generated_at": "PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply",
   "tables": [
     {
       "name": "staff",
@@ -296,6 +296,250 @@ window.__SCHEMA__ = {
         { "name": "quantity", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Base units in transit for this lot; must be > 0." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "When the lot was dispatched." }
       ]
+    },
+    {
+      "name": "clients",
+      "description": "Customers (retail and wholesale). Pricing tier follows client_type at sale time.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "client_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "retail | wholesale — selects the default price tier." },
+        { "name": "full_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Personal name for retail customers." },
+        { "name": "business_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Company name for wholesale customers." },
+        { "name": "nit", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Tax id (NIT) for invoicing." },
+        { "name": "ci", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "National id (CI) for retail." },
+        { "name": "phone", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Contact phone." },
+        { "name": "email", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Contact email." },
+        { "name": "address", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Street address." },
+        { "name": "city", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "City." },
+        { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form notes." },
+        { "name": "is_active", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Soft-delete flag." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "cash_registers",
+      "description": "Physical POS registers; each is bound to one warehouse.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "register_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (CAJA-####) from seq_cash_register." },
+        { "name": "name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Display name." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Warehouse this register belongs to; CASCADE." },
+        { "name": "is_active", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Soft-delete flag." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "cash_sessions",
+      "description": "Cash drawer sessions: one open session per register drives POS tender and the close-out reconciliation.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "register_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to cash_registers; RESTRICT." },
+        { "name": "opened_by", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Staff who opened the session; RESTRICT." },
+        { "name": "closed_by", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff who closed it; SET NULL." },
+        { "name": "opening_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Float at open." },
+        { "name": "total_sales", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Running sales total." },
+        { "name": "total_cash_sales", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Running cash sales." },
+        { "name": "total_qr_sales", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Running QR sales." },
+        { "name": "total_expenses", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Running expenses." },
+        { "name": "expected_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "opening + cash in - cash out." },
+        { "name": "actual_amount", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "Counted cash at close." },
+        { "name": "difference", "type": "numeric(16,2)", "nullable": true, "pk": false, "fk": false, "description": "actual - expected." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "open | closed." },
+        { "name": "closing_notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Notes at close." },
+        { "name": "opened_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Opened at." },
+        { "name": "closed_at", "type": "timestamptz", "nullable": true, "pk": false, "fk": false, "description": "Closed at." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "quotations",
+      "description": "Price quotes that can convert into a sale. client_id optional so one-off prospects can be quoted by name/phone.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "quotation_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (COT-########)." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Optional FK to clients; SET NULL." },
+        { "name": "client_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Prospect name when no client row." },
+        { "name": "client_phone", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Prospect phone." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Sum of line subtotals." },
+        { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Header discount." },
+        { "name": "tax_rate", "type": "numeric(6,4)", "nullable": false, "pk": false, "fk": false, "description": "Tax rate applied." },
+        { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "subtotal - discount + tax." },
+        { "name": "terms_conditions", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Terms text." },
+        { "name": "valid_until", "type": "date", "nullable": true, "pk": false, "fk": false, "description": "Expiry date." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "draft | sent | accepted | converted | expired | cancelled." },
+        { "name": "converted_sale_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "FK to the resulting sale; SET NULL (added after sales exists)." },
+        { "name": "created_by", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Staff author; RESTRICT." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "sales",
+      "description": "Sales across three modes: direct (immediate), order (deferred delivery), credit (deferred payment). FIFO stock exit happens via _emit_sale_exit.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "sale_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (VTA-########)." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Optional FK to clients; SET NULL." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Selling warehouse; RESTRICT." },
+        { "name": "cash_session_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Drawer session; SET NULL." },
+        { "name": "quotation_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Source quotation; SET NULL." },
+        { "name": "sale_mode", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "direct | order | credit." },
+        { "name": "sale_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "retail | wholesale." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Sum of line subtotals." },
+        { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Header discount." },
+        { "name": "discount_percent", "type": "numeric(6,4)", "nullable": false, "pk": false, "fk": false, "description": "Header discount percent." },
+        { "name": "tax_rate", "type": "numeric(6,4)", "nullable": false, "pk": false, "fk": false, "description": "Tax rate applied." },
+        { "name": "tax_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Computed tax." },
+        { "name": "total", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Final total." },
+        { "name": "payment_method", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "cash | qr | credit." },
+        { "name": "amount_paid", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Paid so far." },
+        { "name": "amount_pending", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Outstanding (credit)." },
+        { "name": "change_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Change returned." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "draft | pending_payment | completed | cancelled | refunded." },
+        { "name": "shipping_date", "type": "date", "nullable": true, "pk": false, "fk": false, "description": "Order delivery date." },
+        { "name": "delivery_notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Delivery notes." },
+        { "name": "advance_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Advance on orders/credit." },
+        { "name": "balance_due", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Order balance due." },
+        { "name": "credit_due_date", "type": "date", "nullable": true, "pk": false, "fk": false, "description": "Credit due date." },
+        { "name": "credit_status", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "pending | partial | paid." },
+        { "name": "cancellation_reason", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Void reason." },
+        { "name": "cancelled_at", "type": "timestamptz", "nullable": true, "pk": false, "fk": false, "description": "Void timestamp." },
+        { "name": "cancelled_by", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff who voided; SET NULL." },
+        { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form notes." },
+        { "name": "sold_by", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Selling staff; RESTRICT." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "sale_items",
+      "description": "Line items. quantity is in the chosen selling unit; conversion_factor maps it to the product base unit for stock exit.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "sale_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to sales; CASCADE." },
+        { "name": "product_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Product sold; RESTRICT." },
+        { "name": "product_unit_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Selling unit; SET NULL." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Source warehouse; RESTRICT." },
+        { "name": "quantity", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Quantity in selling unit; > 0." },
+        { "name": "unit_name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Selling unit label." },
+        { "name": "conversion_factor", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Selling-unit to base-unit factor." },
+        { "name": "unit_price", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Price per selling unit; > 0." },
+        { "name": "price_type", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Price classification." },
+        { "name": "price_source", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Where the price came from." },
+        { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line discount." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
+        { "name": "source_lot_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "First FIFO lot consumed; SET NULL." },
+        { "name": "tier_label", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Applied price tier label." },
+        { "name": "tier_min_quantity", "type": "numeric(16,4)", "nullable": true, "pk": false, "fk": false, "description": "Tier minimum quantity." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "sale_payments",
+      "description": "Split-tender payments for a sale; sum should match sales.amount_paid.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "sale_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to sales; CASCADE." },
+        { "name": "payment_method", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "cash | qr | credit." },
+        { "name": "amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Tendered amount; > 0." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "credit_payments",
+      "description": "Installments paid against a credit sale; each reduces sales.amount_pending and posts a cash movement.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "sale_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to sales; CASCADE." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "FK to clients; SET NULL." },
+        { "name": "amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Installment amount; > 0." },
+        { "name": "payment_method", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "cash | qr." },
+        { "name": "received_by", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Staff who received it; RESTRICT." },
+        { "name": "cash_session_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Drawer session; SET NULL." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "cash_movements",
+      "description": "Append-only ledger of every drawer in/out within a session; drives the close-out expected_amount.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "session_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to cash_sessions; CASCADE." },
+        { "name": "movement_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "sale_cash | sale_qr | credit_payment | expense | withdrawal | deposit | refund_cash." },
+        { "name": "amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Amount; > 0." },
+        { "name": "description", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Free-form description." },
+        { "name": "expense_category", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Category when expense." },
+        { "name": "reference_type", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Source document type." },
+        { "name": "reference_id", "type": "uuid", "nullable": true, "pk": false, "fk": false, "description": "Source document id." },
+        { "name": "created_by", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Staff who posted it; RESTRICT." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "quotation_items",
+      "description": "Quote line items; copied into sale_items on conversion. No stock is held by a quote.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "quotation_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to quotations; CASCADE." },
+        { "name": "product_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Product quoted; RESTRICT." },
+        { "name": "product_unit_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Selling unit; SET NULL." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Reference warehouse; SET NULL." },
+        { "name": "quantity", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Quantity; > 0." },
+        { "name": "unit_name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Selling unit label." },
+        { "name": "conversion_factor", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Selling-unit to base-unit factor." },
+        { "name": "unit_price", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Price per selling unit; > 0." },
+        { "name": "price_type", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Price classification." },
+        { "name": "discount_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line discount." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
+        { "name": "source_lot_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Reference FIFO lot; SET NULL." },
+        { "name": "tier_label", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Applied price tier label." },
+        { "name": "tier_min_quantity", "type": "numeric(16,4)", "nullable": true, "pk": false, "fk": false, "description": "Tier minimum quantity." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
+    },
+    {
+      "name": "returns",
+      "description": "Customer returns against a completed sale. Full cap/validation of returned quantities lands in 0008 (#33).",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "return_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (DEV-########)." },
+        { "name": "sale_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to the original sale; RESTRICT." },
+        { "name": "client_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "FK to clients; SET NULL." },
+        { "name": "warehouse_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Receiving warehouse; RESTRICT." },
+        { "name": "total_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Refunded/credited total." },
+        { "name": "resolution_type", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "refund_cash | refund_qr | exchange." },
+        { "name": "reason", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Return reason." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "pending | approved | rejected | completed." },
+        { "name": "processed_by", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff who processed it; SET NULL." },
+        { "name": "approved_by", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff who approved it; SET NULL." },
+        { "name": "cash_session_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Drawer session for refunds; SET NULL." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Updated at (trigger)." }
+      ]
+    },
+    {
+      "name": "return_items",
+      "description": "Returned lines. restock=true + condition=good re-enters stock at location_id; damaged/defective are written off.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "return_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "FK to returns; CASCADE." },
+        { "name": "sale_item_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Original sale line; SET NULL." },
+        { "name": "product_id", "type": "uuid", "nullable": false, "pk": false, "fk": true, "description": "Returned product; RESTRICT." },
+        { "name": "product_unit_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Selling unit; SET NULL." },
+        { "name": "quantity", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Returned quantity; > 0." },
+        { "name": "unit_name", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Selling unit label." },
+        { "name": "unit_price", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Price per unit; > 0." },
+        { "name": "subtotal", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Line subtotal." },
+        { "name": "restock", "type": "boolean", "nullable": false, "pk": false, "fk": false, "description": "Whether the item re-enters stock." },
+        { "name": "condition", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "good | damaged | defective." },
+        { "name": "source_lot_item_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Lot to restock into; SET NULL." },
+        { "name": "location_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Restock location; SET NULL." },
+        { "name": "notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Line notes." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
     }
   ],
   "relations": [
@@ -335,6 +579,48 @@ window.__SCHEMA__ = {
     { "source_table": "transfer_items", "source_column": "to_location_id", "target_table": "warehouse_locations", "target_column": "id" },
     { "source_table": "transfer_lots", "source_column": "transfer_id", "target_table": "transfers", "target_column": "id" },
     { "source_table": "transfer_lots", "source_column": "product_id", "target_table": "products", "target_column": "id" },
-    { "source_table": "transfer_lots", "source_column": "stock_entry_item_id", "target_table": "stock_entry_items", "target_column": "id" }
+    { "source_table": "transfer_lots", "source_column": "stock_entry_item_id", "target_table": "stock_entry_items", "target_column": "id" },
+    { "source_table": "cash_registers", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "cash_sessions", "source_column": "register_id", "target_table": "cash_registers", "target_column": "id" },
+    { "source_table": "cash_sessions", "source_column": "opened_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "cash_sessions", "source_column": "closed_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "quotations", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "quotations", "source_column": "converted_sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "quotations", "source_column": "created_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "sales", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "sales", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "sales", "source_column": "cash_session_id", "target_table": "cash_sessions", "target_column": "id" },
+    { "source_table": "sales", "source_column": "quotation_id", "target_table": "quotations", "target_column": "id" },
+    { "source_table": "sales", "source_column": "cancelled_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "sales", "source_column": "sold_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "sale_items", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "sale_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
+    { "source_table": "sale_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" },
+    { "source_table": "sale_items", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "sale_items", "source_column": "source_lot_id", "target_table": "stock_entry_items", "target_column": "id" },
+    { "source_table": "sale_payments", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "credit_payments", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "credit_payments", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "credit_payments", "source_column": "received_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "credit_payments", "source_column": "cash_session_id", "target_table": "cash_sessions", "target_column": "id" },
+    { "source_table": "cash_movements", "source_column": "session_id", "target_table": "cash_sessions", "target_column": "id" },
+    { "source_table": "cash_movements", "source_column": "created_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "quotation_items", "source_column": "quotation_id", "target_table": "quotations", "target_column": "id" },
+    { "source_table": "quotation_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
+    { "source_table": "quotation_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" },
+    { "source_table": "quotation_items", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "quotation_items", "source_column": "source_lot_id", "target_table": "stock_entry_items", "target_column": "id" },
+    { "source_table": "returns", "source_column": "sale_id", "target_table": "sales", "target_column": "id" },
+    { "source_table": "returns", "source_column": "client_id", "target_table": "clients", "target_column": "id" },
+    { "source_table": "returns", "source_column": "warehouse_id", "target_table": "warehouses", "target_column": "id" },
+    { "source_table": "returns", "source_column": "processed_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "returns", "source_column": "approved_by", "target_table": "staff", "target_column": "id" },
+    { "source_table": "returns", "source_column": "cash_session_id", "target_table": "cash_sessions", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "return_id", "target_table": "returns", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "sale_item_id", "target_table": "sale_items", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "product_id", "target_table": "products", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "product_unit_id", "target_table": "product_units", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "source_lot_item_id", "target_table": "stock_entry_items", "target_column": "id" },
+    { "source_table": "return_items", "source_column": "location_id", "target_table": "warehouse_locations", "target_column": "id" }
   ]
 };
