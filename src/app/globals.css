@@ -13,6 +13,7 @@
   --color-muted: var(--bg-muted);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-overlay: var(--overlay);
 
   --color-fg: var(--text);
   --color-fg-muted: var(--text-muted);
