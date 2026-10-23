@@ -405,7 +405,7 @@ window.__SCHEMA__ = {
         { "name": "amount_paid", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Paid so far." },
         { "name": "amount_pending", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Outstanding (credit)." },
         { "name": "change_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Change returned." },
-        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "draft | pending_payment | completed | cancelled | refunded." },
+        { "name": "status", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "draft | pending_payment | completed | cancelled | refunded | partially_refunded." },
         { "name": "shipping_date", "type": "date", "nullable": true, "pk": false, "fk": false, "description": "Order delivery date." },
         { "name": "delivery_notes", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Delivery notes." },
         { "name": "advance_amount", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Advance on orders/credit." },
@@ -515,7 +515,7 @@ window.__SCHEMA__ = {
     },
     {
       "name": "returns",
-      "description": "Customer returns against a completed sale. Full cap/validation of returned quantities lands in 0008 (#33).",
+      "description": "Customer returns against a completed sale. Lines are capped against prior returns and priced from the real sale line prorated by the sale discount/tax (0008, #33).",
       "columns": [
         { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
         { "name": "return_number", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Unique code (DEV-########)." },
