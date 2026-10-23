@@ -575,6 +575,10 @@
                 color: C.accent,
               },
             },
+            {
+              selector: "node:childless.highlight",
+              style: { "border-width": 3, "border-color": C.accent },
+            },
           ],
           layout: { name: "preset", fit: true, padding: 50 },
         });
@@ -683,12 +687,14 @@
             });
             hood.removeClass("faded");
             hood.edges().addClass("highlight");
+            hood.nodes(":childless").addClass("highlight");
             n.removeClass("faded");
             renderBlockDetail(n);
           } else {
             var nb = n.closedNeighborhood();
             nb.removeClass("faded");
             nb.edges().addClass("highlight");
+            nb.nodes(":childless").addClass("highlight");
             n.parent().removeClass("faded");
             renderDetail(n.id());
           }
