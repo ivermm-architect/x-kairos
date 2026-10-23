@@ -19,10 +19,18 @@
       <h1>x-kairos · ER</h1>
       <span class="meta" id="meta"></span>
       <div class="controls">
+        <input
+          id="search"
+          type="search"
+          placeholder="Search table/column…"
+          aria-label="Search tables and columns"
+        />
         <button class="zoom" id="zoomOut" title="Zoom out">−</button>
         <button class="zoom" id="zoomIn" title="Zoom in">+</button>
         <button id="fit">Fit</button>
-        <button id="relayout">Re-layout</button>
+        <button id="relayout" title="Reset to the automatic layout">Re-layout</button>
+        <button id="save" title="Save the current manual layout">Save</button>
+        <button id="clearSaved" title="Clear the saved layout">Clear</button>
       </div>
       <div class="legend" id="legend"></div>
     </header>
