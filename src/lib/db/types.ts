@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          changes: Json | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          entity_name: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          changes?: Json | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          entity_name?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          changes?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string
