@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useUiStore } from "@/lib/store/ui";
+import { useUiStore, readStoredTheme } from "@/lib/store/ui";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 
@@ -14,9 +14,18 @@ import { Topbar } from "./topbar";
  */
 export function AppShell({ title, children }: { title?: string; children: ReactNode }) {
   const theme = useUiStore((s) => s.theme);
+  const setTheme = useUiStore((s) => s.setTheme);
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const closeSidebar = useUiStore((s) => s.closeSidebar);
+
+  // Hydrate the persisted theme after mount. Done here (not in the store's
+  // initial state) so the first client render matches the server and React
+  // doesn't warn; the inline head script already applied it before paint.
+  useEffect(() => {
+    const stored = readStoredTheme();
+    if (stored) setTheme(stored);
+  }, [setTheme]);
 
   useEffect(() => {
     const root = document.documentElement;

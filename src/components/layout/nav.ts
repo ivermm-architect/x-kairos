@@ -13,14 +13,19 @@ export type NavItem = {
   icon: string;
 };
 
+// Mirrors the legacy Kairos module set so the back-office exposes the same
+// surfaces: Inicio (dashboard), Inventario, Ventas (POS + web orders live
+// under it), Caja, Clientes, Reportes, Auditoría, Usuarios, Configuración.
+// Hrefs are module roots; the final sub-route taxonomy is owned by #24.
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", icon: "◇" },
-  { href: "/pos", label: "Punto de venta", icon: "▣" },
   { href: "/inventario", label: "Inventario", icon: "▤" },
+  { href: "/ventas", label: "Ventas", icon: "▣" },
   { href: "/caja", label: "Caja", icon: "▦" },
-  { href: "/pedidos", label: "Pedidos web", icon: "◉" },
   { href: "/clientes", label: "Clientes", icon: "◍" },
   { href: "/reportes", label: "Reportes", icon: "▧" },
+  { href: "/auditoria", label: "Auditoría", icon: "▨" },
+  { href: "/usuarios", label: "Usuarios", icon: "◉" },
   { href: "/configuracion", label: "Configuración", icon: "⚙" },
 ];
 
