@@ -1,9 +1,9 @@
-// PROPOSAL — phases 0-6 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency), pending apply.
+// PROPOSAL — phases 0-7 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency + Audit), pending apply.
 // NOT generated from the live DB yet. After the migrations land, regenerate
 // this file from the real database with introspect.sql (see README.md).
 // Descriptions come from COMMENT ON TABLE/COLUMN once the schema exists.
 window.__SCHEMA__ = {
-  "generated_at": "PROPOSAL — phases 0-6 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency), pending apply",
+  "generated_at": "PROPOSAL — phases 0-7 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web + Multicurrency + Audit), pending apply",
   "tables": [
     {
       "name": "staff",
@@ -638,6 +638,21 @@ window.__SCHEMA__ = {
         { "name": "effective_date", "type": "date", "nullable": false, "pk": false, "fk": false, "description": "Date the rate applies from; unique per (from,to,date)." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
       ]
+    },
+    {
+      "name": "audit_log",
+      "description": "Append-only audit trail: one row per watched-table DML, written server-side by audit_trigger (D15). Staff-readable; no direct writes.",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false, "pk": true, "fk": false, "description": "Primary key." },
+        { "name": "actor_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff who made the change (staff.id = auth.uid()); SET NULL." },
+        { "name": "actor_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Actor display name captured at write time." },
+        { "name": "action", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "INSERT | UPDATE | DELETE." },
+        { "name": "entity", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Source table name." },
+        { "name": "entity_id", "type": "uuid", "nullable": true, "pk": false, "fk": false, "description": "Changed row id (best effort)." },
+        { "name": "entity_name", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Human label of the changed row (name/number)." },
+        { "name": "changes", "type": "jsonb", "nullable": true, "pk": false, "fk": false, "description": "Full row on INSERT/DELETE; on UPDATE only changed columns as {old,new}." },
+        { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Created at." }
+      ]
     }
   ],
   "relations": [
@@ -737,6 +752,7 @@ window.__SCHEMA__ = {
     { "source_table": "quotations", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
     { "source_table": "quotation_items", "source_column": "source_currency", "target_table": "currencies", "target_column": "code" },
     { "source_table": "returns", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
-    { "source_table": "web_orders", "source_column": "currency", "target_table": "currencies", "target_column": "code" }
+    { "source_table": "web_orders", "source_column": "currency", "target_table": "currencies", "target_column": "code" },
+    { "source_table": "audit_log", "source_column": "actor_id", "target_table": "staff", "target_column": "id" }
   ]
 };

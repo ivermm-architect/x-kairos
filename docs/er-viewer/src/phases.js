@@ -13,6 +13,7 @@
     4: { milestone: "M4", label: "Cash", color: "#f2cc60" },
     5: { milestone: "M5", label: "Web public", color: "#ff7b72" },
     6: { milestone: "M6", label: "Multicurrency", color: "#39c5cf" },
+    7: { milestone: "M7", label: "Audit", color: "#db61a2" },
   };
 
   ERV.TABLE_PHASE = {
@@ -52,6 +53,7 @@
     web_order_items: 5,
     currencies: 6,
     exchange_rates: 6,
+    audit_log: 7,
   };
 
   ERV.UNASSIGNED = { milestone: "—", label: "Unassigned", color: "#8b949e" };
