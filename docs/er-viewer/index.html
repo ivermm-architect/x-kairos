@@ -405,8 +405,8 @@
         // stable and reads by milestone. Positions are computed here; the
         // Cytoscape layout is 'preset' (it just honours these positions).
         var COLS_IN_BLOCK = 2; // tables per row inside a block
-        var CELL_W = 290,
-          CELL_H = 115; // spacing between table nodes (tables fill most of it)
+        var CELL_W = 400,
+          CELL_H = 260; // spacing between table nodes (labels are large)
         var BLOCK_GAP_X = 160,
           BLOCK_GAP_Y = 200,
           BLOCKS_PER_ROW = 3;
@@ -529,10 +529,10 @@
                 "text-justification": "left",
                 "text-wrap": "wrap",
                 "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
-                "font-size": 12,
-                padding: "10px",
-                width: 230,
-                height: 70,
+                "font-size": 11,
+                padding: "12px",
+                width: "label",
+                height: "label",
               },
             },
             {
