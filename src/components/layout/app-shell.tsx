@@ -1,0 +1,80 @@
+"use client";
+
+import { useEffect, type ReactNode } from "react";
+import { useUiStore } from "@/lib/store/ui";
+import { Sidebar } from "./sidebar";
+import { Topbar } from "./topbar";
+
+/**
+ * Admin frame: a collapsible desktop rail (≥lg) and an off-canvas mobile drawer
+ * (<lg) sharing the same <Sidebar>, plus the sticky <Topbar> and the scrolling
+ * content column. Mobile-first — usable at 360px, scales to tablet/desktop. All
+ * layout state lives in `useUiStore`; the drawer closes on backdrop click or
+ * Escape, and the chosen theme is applied to <html>.
+ */
+export function AppShell({ title, children }: { title?: string; children: ReactNode }) {
+  const theme = useUiStore((s) => s.theme);
+  const sidebarOpen = useUiStore((s) => s.sidebarOpen);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const closeSidebar = useUiStore((s) => s.closeSidebar);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme) root.setAttribute("data-theme", theme);
+    else root.removeAttribute("data-theme");
+  }, [theme]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeSidebar();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [sidebarOpen, closeSidebar]);
+
+  return (
+    <div className="flex min-h-dvh bg-app">
+      {/* Desktop rail */}
+      <aside
+        className={[
+          "hidden shrink-0 border-r border-border bg-surface transition-[width] lg:block",
+          sidebarCollapsed ? "w-16" : "w-64",
+        ].join(" ")}
+      >
+        <div className="sticky top-0 h-dvh overflow-y-auto">
+          <Sidebar />
+        </div>
+      </aside>
+
+      {/* Mobile drawer + backdrop */}
+      <div
+        className={[
+          "fixed inset-0 z-30 bg-black/50 transition-opacity lg:hidden",
+          sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        ].join(" ")}
+        onClick={closeSidebar}
+        aria-hidden
+      />
+      <aside
+        inert={!sidebarOpen}
+        className={[
+          "fixed inset-y-0 left-0 z-40 w-72 border-r border-border bg-surface transition-transform lg:hidden",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+      >
+        <div className="h-full overflow-y-auto">
+          <Sidebar />
+        </div>
+      </aside>
+
+      {/* Main column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Topbar title={title} />
+        <main className="flex-1 overflow-x-hidden p-4 pb-[env(safe-area-inset-bottom)]">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
