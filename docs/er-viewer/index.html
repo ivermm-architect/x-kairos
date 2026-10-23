@@ -383,9 +383,10 @@
 
         // Columns are left-aligned (text-justification:left); the table name is
         // centered by padding it with spaces to the widest row (monospace font).
-        // Monospace metrics at font-size 11 (approx): char ~6.8px, line ~15px.
-        var CHAR_W = 6.8,
-          LINE_H = 15;
+        // Monospace metrics at font-size 11 (approx). Generous char width so
+        // the fixed node box always contains the text (no overflow/wrap).
+        var CHAR_W = 8,
+          LINE_H = 16;
         function label(t) {
           var p = phaseOf(t.name);
           var rows = t.columns.map(function (c) {
@@ -401,7 +402,7 @@
           var lines = rows.length + 2; // title + separator + columns
           return {
             text: [new Array(pad + 1).join(" ") + title, sep].concat(rows).join("\n"),
-            w: Math.round(cols * CHAR_W),
+            w: Math.round(cols * CHAR_W) + 24,
             h: Math.round(lines * LINE_H),
           };
         }
@@ -539,12 +540,12 @@
                 "text-halign": "center",
                 "text-justification": "left",
                 "text-wrap": "wrap",
-                "text-max-width": 1000,
+                "text-max-width": "data(w)",
                 "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
                 "font-size": 11,
-                padding: "10px",
+                padding: "8px",
                 width: "data(w)",
-                height: "data(h)",
+                height: "label",
               },
             },
             {
