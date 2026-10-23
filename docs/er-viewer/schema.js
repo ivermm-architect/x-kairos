@@ -1,9 +1,9 @@
-// PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply.
+// PROPOSAL — phases 0-5 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web), pending apply.
 // NOT generated from the live DB yet. After the migrations land, regenerate
 // this file from the real database with introspect.sql (see README.md).
 // Descriptions come from COMMENT ON TABLE/COLUMN once the schema exists.
 window.__SCHEMA__ = {
-  "generated_at": "PROPOSAL — phases 1-3 (Foundation + Catalog + Inventory + Sales/POS), pending apply",
+  "generated_at": "PROPOSAL — phases 0-5 (Foundation + Catalog + Inventory + Sales/POS + Cash + Web), pending apply",
   "tables": [
     {
       "name": "staff",
