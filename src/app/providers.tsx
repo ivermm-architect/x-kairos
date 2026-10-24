@@ -2,11 +2,14 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { AuthProvider } from "@/lib/auth/context";
 
 /**
  * App-wide client runtime, mounted once in the root layout so every feature
- * shares a single React Query cache. The client is created lazily in state so
- * it is never shared across requests or re-created on re-render.
+ * shares a single React Query cache and one auth context. The query client is
+ * created lazily in state so it is never shared across requests or re-created
+ * on re-render. AuthProvider lives here (not just the admin group) because the
+ * login screen and public account views need the session too.
  */
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -18,5 +21,9 @@ export function Providers({ children }: { children: ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
 }

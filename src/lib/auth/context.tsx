@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { safeGetSession } from "@/lib/auth/safe-session";
 
 export type AuthState = {
   session: Session | null;
@@ -55,13 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Initial read, then stay in sync with sign in/out and token refresh.
-    supabase.auth
-      .getSession()
-      .then(async ({ data, error: sessErr }) => {
-        if (sessErr) throw sessErr;
+    // `safeGetSession` absorbs orphaned/stale refresh tokens (cleans them and
+    // resolves to null) so a dead token can never hang or crash the app.
+    safeGetSession()
+      .then(async ({ session: current }) => {
         if (!active) return;
-        setSession(data.session);
-        await loadStaff(data.session);
+        setSession(current);
+        await loadStaff(current);
       })
       .catch((e) => {
         if (active) setError(e instanceof Error ? e : new Error(String(e)));
