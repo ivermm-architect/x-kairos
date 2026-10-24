@@ -62,14 +62,14 @@
   }
 
   // ---- Layout constants -----------------------------------------------------
-  var COL_W = 320; // stage column width
+  var COL_W = 360; // stage column width (wide enough to keep columns apart)
   var STAGE_Y = 0; // stage header row
-  var OP_Y0 = 100; // first op under its stage header
-  var OP_STEP = 164; // vertical gap between stacked (alternative) ops
-  var CAP_DY = 36; // Spanish action caption under its op
-  var SUB_DY = 78; // writes sub-node under its op
+  var OP_Y0 = 110; // first op under its stage header
+  var OP_STEP = 200; // vertical gap between stacked (alternative) ops
+  var CAP_DY = 46; // Spanish action caption under its op
+  var SUB_DY = 104; // writes sub-node under its op
   var BAND_H = 150; // overview: vertical space per flow row
-  var LABEL_X = -220; // overview: flow label column
+  var LABEL_X = -240; // overview: flow label column
 
   // ---- Element builders -----------------------------------------------------
   function stageHeader(id, label, x, y) {
@@ -102,7 +102,7 @@
   function subNode(id, writes, x, y) {
     var txt = "escribe: " + (truncWrites(writes) || "sin escritura de tablas");
     return {
-      data: { id: id, label: txt, kind: "sub", w: width(txt, 6.4, 140) },
+      data: { id: id, label: txt, kind: "sub" },
       position: { x: x, y: y },
     };
   }
@@ -248,15 +248,17 @@
         selector: "node[kind='cap']",
         style: {
           shape: "rectangle",
-          width: 240,
-          height: 34,
+          width: 260,
+          height: "label",
+          padding: "2px",
           "background-opacity": 0,
           "border-width": 0,
           label: "data(label)",
           color: C.muted,
           "text-wrap": "wrap",
-          "text-max-width": 236,
-          "font-size": 9.5,
+          "text-max-width": 256,
+          "font-size": 10,
+          "line-height": 1.3,
           "text-valign": "center",
           "text-halign": "center",
           events: "no",
@@ -266,8 +268,9 @@
         selector: "node[kind='sub']",
         style: {
           shape: "round-rectangle",
-          width: "data(w)",
-          height: 24,
+          width: 260,
+          height: "label",
+          padding: "7px",
           "background-color": "#0f2230",
           "border-width": 1,
           "border-color": C.table,
@@ -276,6 +279,9 @@
           color: C.table,
           "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
           "font-size": 10,
+          "line-height": 1.4,
+          "text-wrap": "wrap",
+          "text-max-width": 244,
           "text-valign": "center",
           "text-halign": "center",
         },
