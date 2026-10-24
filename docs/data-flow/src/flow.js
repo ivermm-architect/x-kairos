@@ -1,12 +1,12 @@
-// Data-flow viewer — a connected graph (Cytoscape) grouped as
-//   User (surface)  ▸  Module  ▸  Process (operation)
-// with arrows flowing right from each process to the tables it writes and the
-// triggers it fires. Reuses the ER viewer's engine; nodes are native (short
-// single-line labels) and draggable, compounds auto-fit their children.
+// Data-flow viewer — drill-down navigator + per-process flow graph.
 //
-// Click a process  → trace its flow (highlight its edges + targets, fade rest).
-// Click a table    → highlight the processes that write it (cross-link).
-// Click empty space → reset. ?table=<name> deep-links from the ER viewer.
+// Left sidebar groups processes as  User (role) ▸ Module ▸ Process. Picking a
+// process ISOLATES its flow on the canvas: just that process and arrows to the
+// tables it writes (solid) + triggers it fires (dashed), laid out left→right.
+// This avoids the "everything at once" hairball; "Show all" restores the full
+// grouped overview. Clicking a table isolates the processes that write it.
+//
+// Buildless (window globals, file://); same engine as the ER viewer.
 (function () {
   "use strict";
 
@@ -14,7 +14,7 @@
   var cyEl = document.getElementById("cy");
   var detailEl = document.getElementById("detail");
   var metaEl = document.getElementById("meta");
-  var legendEl = document.getElementById("legend");
+  var navEl = document.getElementById("nav");
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>]/g, function (c) {
@@ -30,11 +30,9 @@
 
   // ---- Palette / tokens -----------------------------------------------------
   var C = {
-    bg: "#0d1117",
     panel: "#161b22",
     border: "#30363d",
     text: "#e6edf3",
-    muted: "#8b949e",
     accent: "#58a6ff",
     table: "#79c0ff",
     trigger: "#db61a2",
@@ -63,23 +61,6 @@
     (ops.length - liveCount) +
     " planned)";
 
-  // ---- Legend (surfaces) ----------------------------------------------------
-  SURF_ORDER.forEach(function (s) {
-    if (!F.surfaces[s]) return;
-    var el = document.createElement("span");
-    el.className = "item";
-    el.innerHTML =
-      '<span class="dot" style="background:' +
-      SURF_COLOR[s] +
-      '"></span><strong style="color:' +
-      SURF_COLOR[s] +
-      '">' +
-      esc(F.surfaces[s]) +
-      "</strong>";
-    legendEl.appendChild(el);
-  });
-
-  // ---- Helpers --------------------------------------------------------------
   function width(label) {
     return Math.max(96, label.length * 7.3 + 26);
   }
@@ -87,12 +68,10 @@
     return s.replace(/[^a-zA-Z0-9]+/g, "_");
   }
 
-  // ---- Build elements -------------------------------------------------------
+  // ---- Build graph elements -------------------------------------------------
   var elements = [];
   var tableSeen = {};
   var trigSeen = {};
-
-  // Column X per lane; preset positions only for leaves (compounds auto-fit).
   var PROC_X = 0,
     TABLE_X = 760,
     TRIG_X = 1180;
@@ -110,7 +89,6 @@
     elements.push({
       data: { id: uid, label: F.surfaces[surface], kind: "user", color: SURF_COLOR[surface] },
     });
-
     Object.keys(F.modules).forEach(function (mkey) {
       var group = surfOps.filter(function (o) {
         return o.module === mkey;
@@ -146,7 +124,6 @@
     y += USER_GAP;
   });
 
-  // Tables + triggers as leaf nodes on the right, plus the flow edges.
   var ty = 0,
     gy = 0;
   ops.forEach(function (o) {
@@ -264,10 +241,10 @@
           "border-color": C.table,
           label: "data(label)",
           color: C.table,
-          "text-valign": "center",
-          "text-halign": "center",
           "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
           "font-size": 11,
+          "text-valign": "center",
+          "text-halign": "center",
         },
       },
       {
@@ -290,9 +267,9 @@
       {
         selector: "edge[kind='write']",
         style: {
-          width: 1.5,
-          "line-color": C.border,
-          "target-arrow-color": C.border,
+          width: 1.6,
+          "line-color": C.accent,
+          "target-arrow-color": C.accent,
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
           "arrow-scale": 0.9,
@@ -301,76 +278,146 @@
       {
         selector: "edge[kind='fire']",
         style: {
-          width: 1.2,
+          width: 1.3,
           "line-color": C.trigger,
           "line-style": "dashed",
-          "line-opacity": 0.5,
           "target-arrow-color": C.trigger,
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
           "arrow-scale": 0.8,
         },
       },
-      { selector: ".faded", style: { opacity: 0.08 } },
-      {
-        selector: "node.hl",
-        style: { "border-color": C.accent, "border-width": 3, "z-index": 10 },
-      },
-      {
-        selector: "edge.hl",
-        style: {
-          "line-color": C.accent,
-          "target-arrow-color": C.accent,
-          "line-opacity": 1,
-          width: 2.5,
-          "z-index": 10,
-        },
-      },
     ],
     layout: { name: "preset", fit: true, padding: 40 },
   });
 
-  // ---- Focus / highlight ----------------------------------------------------
-  function clearFocus() {
-    cy.elements().removeClass("faded hl");
-    detailEl.innerHTML = PLACEHOLDER;
+  // Remember the overview positions so "Show all" can restore them.
+  var orig = {};
+  cy.nodes().forEach(function (n) {
+    orig[n.id()] = { x: n.position("x"), y: n.position("y") };
+  });
+
+  // ---- Isolate helpers ------------------------------------------------------
+  function hideAll() {
+    cy.elements().style("display", "none");
   }
-  function focusEles(coll) {
-    cy.elements().addClass("faded");
-    coll.removeClass("faded").addClass("hl");
+  function restorePositions() {
+    cy.nodes().forEach(function (n) {
+      var p = orig[n.id()];
+      if (p) n.position(p);
+    });
+  }
+  function column(nodes, x, cy0) {
+    var n = nodes.length;
+    nodes.forEach(function (node, i) {
+      node.position({ x: x, y: cy0 + (i - (n - 1) / 2) * 52 });
+    });
   }
 
-  function focusOp(id) {
-    var n = cy.getElementById("op_" + id);
-    if (n.empty()) return;
-    var edges = n.connectedEdges();
-    var hood = n.union(edges).union(edges.connectedNodes());
-    focusEles(hood.union(n.ancestors()));
+  function selectOp(id) {
+    var op = cy.getElementById("op_" + id);
+    if (op.empty()) return;
+    var edges = op.connectedEdges();
+    var targets = edges.targets();
+    var tbls = targets.filter("[kind='table']");
+    var trgs = targets.filter("[kind='trigger']");
+    var visible = op.union(edges).union(targets).union(op.ancestors());
+
+    hideAll();
+    visible.style("display", "element");
+    var ox = op.position("x"),
+      oy = op.position("y");
+    column(tbls, ox + 330, oy);
+    column(trgs, ox + 660, oy);
+    cy.fit(visible, 60);
     renderOpDetail(opById[id]);
+    markNav("op_" + id);
   }
-  function focusTable(name) {
-    var n = cy.getElementById("tbl_" + name);
-    if (n.empty()) return;
-    var edges = n.connectedEdges();
-    var srcOps = edges.sources();
-    var hood = n.union(edges).union(srcOps);
-    focusEles(hood.union(srcOps.ancestors()));
+
+  function selectTable(name) {
+    var t = cy.getElementById("tbl_" + name);
+    if (t.empty()) return;
+    var edges = t.connectedEdges("[kind='write']");
+    var srcs = edges.sources();
+    var visible = t.union(edges).union(srcs); // bare ops (no compounds) for clarity
+
+    hideAll();
+    visible.style("display", "element");
+    var tx = t.position("x"),
+      tyy = t.position("y");
+    column(srcs, tx - 360, tyy);
+    cy.fit(visible, 60);
     renderTableDetail(
       name,
-      srcOps.map(function (o) {
+      srcs.map(function (o) {
         return o.id().replace(/^op_/, "");
       }),
     );
+    markNav(null);
+  }
+
+  function showAll() {
+    cy.elements().style("display", "element");
+    restorePositions();
+    cy.fit(40);
+    detailEl.innerHTML = PLACEHOLDER;
+    markNav(null);
   }
 
   cy.on("tap", "node[kind='op']", function (e) {
-    focusOp(e.target.id().replace(/^op_/, ""));
+    selectOp(e.target.id().replace(/^op_/, ""));
   });
   cy.on("tap", "node[kind='table']", function (e) {
-    focusTable(e.target.id().replace(/^tbl_/, ""));
+    selectTable(e.target.id().replace(/^tbl_/, ""));
   });
-  cy.on("tap", function (e) {
-    if (e.target === cy) clearFocus();
+
+  // ---- Sidebar navigator ----------------------------------------------------
+  var navButtons = {};
+  function markNav(activeId) {
+    Object.keys(navButtons).forEach(function (k) {
+      navButtons[k].classList.toggle("active", k === activeId);
+      navButtons[k].setAttribute("aria-pressed", k === activeId ? "true" : "false");
+    });
+  }
+  SURF_ORDER.forEach(function (surface) {
+    var surfOps = ops.filter(function (o) {
+      return o.surface === surface;
+    });
+    if (!surfOps.length) return;
+    var role = document.createElement("div");
+    role.className = "nav-role";
+    role.innerHTML =
+      '<div class="nav-role-head"><span class="dot" style="background:' +
+      SURF_COLOR[surface] +
+      '"></span>' +
+      esc(F.surfaces[surface]) +
+      "</div>";
+    Object.keys(F.modules).forEach(function (mkey) {
+      var group = surfOps.filter(function (o) {
+        return o.module === mkey;
+      });
+      if (!group.length) return;
+      var mh = document.createElement("div");
+      mh.className = "nav-mod";
+      mh.textContent = F.modules[mkey];
+      role.appendChild(mh);
+      group.forEach(function (o) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "nav-op" + (o.status === "planned" ? " planned" : "");
+        b.style.borderLeftColor = SURF_COLOR[surface];
+        b.setAttribute("aria-pressed", "false");
+        b.innerHTML =
+          esc(o.label) +
+          (o.status === "planned" ? ' <span class="badge planned">planned</span>' : "");
+        b.addEventListener("click", function () {
+          selectOp(o.id);
+        });
+        role.appendChild(b);
+        navButtons["op_" + o.id] = b;
+      });
+    });
+    navEl.appendChild(role);
   });
 
   // ---- Detail panel ---------------------------------------------------------
@@ -434,7 +481,7 @@
     detailEl.innerHTML = html;
     Array.prototype.forEach.call(detailEl.querySelectorAll(".rel-op"), function (b) {
       b.addEventListener("click", function () {
-        focusOp(b.getAttribute("data-op"));
+        selectOp(b.getAttribute("data-op"));
       });
     });
   }
@@ -455,39 +502,24 @@
   document.getElementById("fit").onclick = function () {
     cy.fit(40);
   };
+  document.getElementById("showAll").onclick = showAll;
 
+  // Sidebar search filters the process list.
   var searchEl = document.getElementById("search");
   if (searchEl)
     searchEl.addEventListener("input", function () {
       var q = this.value.trim().toLowerCase();
-      if (!q) {
-        clearFocus();
-        return;
-      }
-      var hits = cy.nodes("[kind='op'], [kind='table']").filter(function (n) {
-        var o = opById[n.id().replace(/^op_/, "")];
-        var hay =
-          n.data("label") + " " + (o ? (o.rpc || "") + " " + (o.writes || []).join(" ") : "");
-        return hay.toLowerCase().indexOf(q) >= 0;
+      ops.forEach(function (o) {
+        var b = navButtons["op_" + o.id];
+        if (!b) return;
+        var hay = (o.label + " " + (o.rpc || "") + " " + (o.writes || []).join(" ")).toLowerCase();
+        b.style.display = !q || hay.indexOf(q) >= 0 ? "" : "none";
       });
-      if (hits.empty()) {
-        cy.elements().addClass("faded");
-        return;
-      }
-      var hood = hits;
-      hits.forEach(function (n) {
-        hood = hood.union(n.connectedEdges()).union(n.connectedEdges().connectedNodes());
-      });
-      focusEles(hood.union(hits.ancestors()));
     });
 
   // ---- Deep-link from the ER viewer: ?table=<name> --------------------------
   var deepTable = new URLSearchParams(window.location.search).get("table");
   if (deepTable && !cy.getElementById("tbl_" + deepTable).empty()) {
-    focusTable(deepTable);
-    cy.animate(
-      { fit: { eles: cy.getElementById("tbl_" + deepTable).closedNeighborhood(), padding: 80 } },
-      { duration: 250 },
-    );
+    selectTable(deepTable);
   }
 })();

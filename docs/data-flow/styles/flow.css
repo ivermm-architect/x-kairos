@@ -135,6 +135,77 @@ header .legend .item .dot {
   inset: 0;
 }
 
+/* Left navigator: role ▸ module ▸ process */
+#nav {
+  width: 260px;
+  flex: none;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 10px 10px 24px;
+}
+.nav-role {
+  margin-bottom: 14px;
+}
+.nav-role-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 4px 2px;
+}
+.nav-role-head .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.nav-mod {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 8px 2px 3px;
+}
+.nav-op {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  margin: 2px 0;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.nav-op:hover {
+  border-color: var(--accent);
+}
+.nav-op:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.nav-op.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+}
+.nav-op.planned {
+  opacity: 0.72;
+}
+.nav-op .badge.planned {
+  margin-left: auto;
+  border-color: var(--muted);
+  color: var(--muted);
+}
+
 /* Detail panel */
 #detail {
   width: 340px;
