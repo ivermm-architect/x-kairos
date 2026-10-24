@@ -16,21 +16,22 @@ export type NavItem = {
 // Mirrors the legacy Kairos module set so the back-office exposes the same
 // surfaces: Inicio (dashboard), Inventario, Ventas (POS + web orders live
 // under it), Caja, Clientes, Reportes, Auditoría, Usuarios, Configuración.
-// Hrefs are module roots; the final sub-route taxonomy is owned by #24.
+// Hrefs live under the `/admin` back-office segment (ADR 0004, #110); the final
+// sub-route taxonomy is owned by #24.
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Inicio", icon: "◇" },
-  { href: "/inventario", label: "Inventario", icon: "▤" },
-  { href: "/ventas", label: "Ventas", icon: "▣" },
-  { href: "/caja", label: "Caja", icon: "▦" },
-  { href: "/clientes", label: "Clientes", icon: "◍" },
-  { href: "/reportes", label: "Reportes", icon: "▧" },
-  { href: "/auditoria", label: "Auditoría", icon: "▨" },
-  { href: "/usuarios", label: "Usuarios", icon: "◉" },
-  { href: "/configuracion", label: "Configuración", icon: "⚙" },
+  { href: "/admin", label: "Inicio", icon: "◇" },
+  { href: "/admin/inventario", label: "Inventario", icon: "▤" },
+  { href: "/admin/ventas", label: "Ventas", icon: "▣" },
+  { href: "/admin/caja", label: "Caja", icon: "▦" },
+  { href: "/admin/clientes", label: "Clientes", icon: "◍" },
+  { href: "/admin/reportes", label: "Reportes", icon: "▧" },
+  { href: "/admin/auditoria", label: "Auditoría", icon: "▨" },
+  { href: "/admin/usuarios", label: "Usuarios", icon: "◉" },
+  { href: "/admin/configuracion", label: "Configuración", icon: "⚙" },
 ];
 
 /** True when `pathname` is the item route or a child of it. */
 export function isActivePath(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
