@@ -394,4 +394,57 @@ window.__FLOWS__ = {
       status: "planned",
     },
   ],
+
+  // End-to-end business flows. Each flow chains the operations above into the
+  // real lifecycle a user walks through, split into ordered stages. The backbone
+  // arrow runs stage→stage through each stage's PRIMARY op (first in `ops`);
+  // extra ops in a stage are alternatives/branches of that stage, not a sequence.
+  // Nothing here is invented — only the verified operations are sequenced by the
+  // relationships documented in their `downstream` prose.
+  flows: [
+    {
+      id: "sales",
+      label: "Ventas",
+      desc: "Del presupuesto al cobro, con post-venta (devolución / anulación).",
+      note: "Entregar aplica a ventas en modo pedido; Cobrar, a ventas a crédito. Ambas son ramas del mismo ciclo, no pasos obligatorios.",
+      stages: [
+        { label: "Cotizar", ops: ["create_quotation", "convert_quotation_to_sale"] },
+        { label: "Vender", ops: ["register_sale"] },
+        { label: "Entregar", ops: ["deliver_order"] },
+        { label: "Cobrar", ops: ["register_credit_payment"] },
+        { label: "Post-venta", ops: ["register_return", "void_sale"] },
+      ],
+    },
+    {
+      id: "web",
+      label: "Pedido web",
+      desc: "Pedido público del storefront → gestión del staff → facturación.",
+      stages: [
+        { label: "Pedir", ops: ["public_warehouses", "create_web_order"] },
+        { label: "Gestionar", ops: ["update_web_order_status"] },
+        { label: "Facturar", ops: ["convert_web_order_to_sale"] },
+      ],
+    },
+    {
+      id: "cash",
+      label: "Caja",
+      desc: "Apertura con fondo contado, movimientos y cierre reconciliado en base.",
+      stages: [
+        { label: "Abrir", ops: ["open_cash_session"] },
+        { label: "Operar", ops: ["add_cash_movement"] },
+        { label: "Cerrar", ops: ["close_cash_session"] },
+      ],
+    },
+    {
+      id: "inventory",
+      label: "Inventario",
+      desc: "Ingreso, transferencia entre almacenes y ajuste/baja de stock.",
+      note: "PLANNED: las tablas existen en 0004 pero los RPC de escritura no están en las migraciones todavía.",
+      stages: [
+        { label: "Ingreso", ops: ["stock_entry"] },
+        { label: "Transferencia", ops: ["transfer"] },
+        { label: "Ajuste / baja", ops: ["defective_relocate"] },
+      ],
+    },
+  ],
 };

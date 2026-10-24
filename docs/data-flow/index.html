@@ -22,20 +22,20 @@
         <button class="zoom" id="zoomOut" title="Zoom out">−</button>
         <button class="zoom" id="zoomIn" title="Zoom in">+</button>
         <button id="fit">Fit</button>
-        <button id="showAll">Show all</button>
+        <button id="showAll">All flows</button>
         <a class="link" href="../er-viewer/index.html">ER viewer →</a>
       </div>
       <div class="legend" id="legend"></div>
     </header>
 
     <div id="main">
-      <nav id="nav" aria-label="Processes by role"></nav>
+      <nav id="nav" aria-label="Business flows"></nav>
       <div id="stage"><div id="cy"></div></div>
       <aside id="detail">
         <p class="placeholder">
-          Grouped by user ▸ module ▸ process. Arrows show the information each process writes
-          (tables and triggers it fires). Click a process to trace its flow, or a table to see which
-          processes write it.
+          Business flows as staged pipelines (Ventas ▸ Caja ▸ Pedido web ▸ Inventario). This
+          overview stacks every flow; pick one in the sidebar to expand its stages and see the
+          tables each step writes. Click a step for its full characteristics.
         </p>
       </aside>
     </div>

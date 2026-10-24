@@ -1,10 +1,11 @@
-// Data-flow viewer — drill-down navigator + per-process flow graph.
+// Data-flow viewer — business flows as staged pipelines.
 //
-// Left sidebar groups processes as  User (role) ▸ Module ▸ Process. Picking a
-// process ISOLATES its flow on the canvas: just that process and arrows to the
-// tables it writes (solid) + triggers it fires (dashed), laid out left→right.
-// This avoids the "everything at once" hairball; "Show all" restores the full
-// grouped overview. Clicking a table isolates the processes that write it.
+// Left sidebar lists end-to-end flows (Ventas, Pedido web, Caja, Inventario).
+// The canvas shows them like a process diagram: stage headers across the top and
+// the steps chained left→right. The overview stacks every flow as a compact row;
+// picking one expands it, adding under each step the tables it writes (the data
+// each process moves). Click a step for its full characteristics (RPC, guard,
+// writes, triggers, downstream).
 //
 // Buildless (window globals, file://); same engine as the ER viewer.
 (function () {
@@ -22,7 +23,8 @@
     });
   }
 
-  if (!F || !Array.isArray(F.operations) || F.operations.length === 0) {
+  var flows = (F && F.flows) || [];
+  if (!F || !Array.isArray(F.operations) || !flows.length) {
     document.getElementById("main").style.display = "none";
     document.getElementById("empty").style.display = "flex";
     return;
@@ -31,182 +33,185 @@
   // ---- Palette / tokens -----------------------------------------------------
   var C = {
     panel: "#161b22",
+    bg: "#0d1117",
     border: "#30363d",
     text: "#e6edf3",
+    muted: "#8b949e",
     accent: "#58a6ff",
+    stage: "#39c5cf",
     table: "#79c0ff",
-    trigger: "#db61a2",
   };
-  var SURF_ORDER = ["pos", "admin", "storefront"];
   var SURF_COLOR = { pos: "#7ee787", admin: "#d2a8ff", storefront: "#ffa657" };
   var PLACEHOLDER = detailEl.innerHTML;
 
-  var ops = F.operations;
   var opById = {};
-  ops.forEach(function (o) {
+  F.operations.forEach(function (o) {
     opById[o.id] = o;
   });
 
-  var liveCount = ops.filter(function (o) {
-    return o.status === "live";
-  }).length;
   metaEl.textContent =
-    "generated " +
-    (F.generated_at || "?") +
-    " · " +
-    ops.length +
-    " processes (" +
-    liveCount +
-    " live · " +
-    (ops.length - liveCount) +
-    " planned)";
+    "generated " + (F.generated_at || "?") + " · " + flows.length + " business flows";
 
-  function width(label) {
-    return Math.max(96, label.length * 7.3 + 26);
+  function width(label, per, min) {
+    return Math.max(min || 96, String(label).length * (per || 7.2) + 24);
   }
-  function slug(s) {
-    return s.replace(/[^a-zA-Z0-9]+/g, "_");
+  function truncWrites(arr) {
+    if (!arr || !arr.length) return "";
+    if (arr.length <= 3) return arr.join(", ");
+    return arr.slice(0, 3).join(", ") + " +" + (arr.length - 3);
   }
 
-  // ---- Build graph elements -------------------------------------------------
-  var elements = [];
-  var tableSeen = {};
-  var trigSeen = {};
-  var PROC_X = 0,
-    TABLE_X = 760,
-    TRIG_X = 1180;
-  var ROW = 64,
-    MOD_GAP = 30,
-    USER_GAP = 70;
-  var y = 0;
+  // ---- Layout constants -----------------------------------------------------
+  var COL_W = 300; // stage column width
+  var STAGE_Y = 0; // stage header row
+  var OP_Y0 = 96; // first op under its stage header
+  var OP_STEP = 118; // vertical gap between stacked (alternative) ops
+  var SUB_DY = 44; // writes sub-node under its op
+  var BAND_H = 150; // overview: vertical space per flow row
+  var LABEL_X = -220; // overview: flow label column
 
-  SURF_ORDER.forEach(function (surface) {
-    var surfOps = ops.filter(function (o) {
-      return o.surface === surface;
-    });
-    if (!surfOps.length) return;
-    var uid = "u_" + surface;
-    elements.push({
-      data: { id: uid, label: F.surfaces[surface], kind: "user", color: SURF_COLOR[surface] },
-    });
-    Object.keys(F.modules).forEach(function (mkey) {
-      var group = surfOps.filter(function (o) {
-        return o.module === mkey;
-      });
-      if (!group.length) return;
-      var mid = "m_" + surface + "_" + mkey;
-      elements.push({
-        data: {
-          id: mid,
-          parent: uid,
-          label: F.modules[mkey],
-          kind: "module",
-          color: SURF_COLOR[surface],
-        },
-      });
-      group.forEach(function (o) {
-        elements.push({
-          data: {
-            id: "op_" + o.id,
-            parent: mid,
-            label: o.label,
-            kind: "op",
-            color: SURF_COLOR[surface],
-            planned: o.status === "planned" ? 1 : 0,
-            w: width(o.label),
-          },
-          position: { x: PROC_X, y: y },
-        });
-        y += ROW;
-      });
-      y += MOD_GAP;
-    });
-    y += USER_GAP;
-  });
+  // ---- Element builders -----------------------------------------------------
+  function stageHeader(id, label, x, y) {
+    return {
+      data: { id: id, label: label, kind: "stage", w: width(label, 7.5, 110) },
+      position: { x: x, y: y },
+    };
+  }
+  function opNode(id, o, x, y) {
+    return {
+      data: {
+        id: id,
+        op: o.id,
+        label: o.label,
+        kind: "op",
+        color: SURF_COLOR[o.surface] || C.accent,
+        planned: o.status === "planned" ? 1 : 0,
+        w: width(o.label, 7.2, 150),
+      },
+      position: { x: x, y: y },
+    };
+  }
+  function subNode(id, writes, x, y) {
+    var txt = truncWrites(writes) || "no table writes";
+    return {
+      data: { id: id, label: txt, kind: "sub", w: width(txt, 6.4, 120) },
+      position: { x: x, y: y },
+    };
+  }
+  function edge(id, s, t, kind) {
+    return { data: { id: id, source: s, target: t, kind: kind } };
+  }
 
-  var ty = 0,
-    gy = 0;
-  ops.forEach(function (o) {
-    (o.writes || []).forEach(function (t) {
-      if (!tableSeen[t]) {
-        tableSeen[t] = 1;
-        elements.push({
-          data: { id: "tbl_" + t, label: t, kind: "table", w: width(t) },
-          position: { x: TABLE_X, y: ty },
-        });
-        ty += ROW;
-      }
-      elements.push({
-        data: {
-          id: "w_" + o.id + "_" + t,
-          source: "op_" + o.id,
-          target: "tbl_" + t,
-          kind: "write",
-        },
+  // Expanded single-flow pipeline: stage headers + ops + writes sub-nodes.
+  function buildFlow(flow) {
+    var els = [];
+    flow.stages.forEach(function (st, si) {
+      var x = si * COL_W;
+      els.push(stageHeader("st_" + flow.id + "_" + si, st.label, x, STAGE_Y));
+      st.ops.forEach(function (opId, oi) {
+        var o = opById[opId];
+        if (!o) return;
+        var y = OP_Y0 + oi * OP_STEP;
+        var nid = "op_" + flow.id + "_" + opId;
+        els.push(opNode(nid, o, x, y));
+        var sid = "sub_" + flow.id + "_" + opId;
+        els.push(subNode(sid, o.writes, x, y + SUB_DY));
+        els.push(edge("d_" + nid, nid, sid, "data"));
       });
     });
-    (o.triggers || []).forEach(function (tr) {
-      var id = "trg_" + slug(tr);
-      if (!trigSeen[id]) {
-        trigSeen[id] = 1;
-        elements.push({
-          data: { id: id, label: tr, kind: "trigger", w: width(tr) },
-          position: { x: TRIG_X, y: gy },
-        });
-        gy += ROW;
+    // Backbone: stage→stage through each stage's primary (first) op.
+    for (var i = 0; i < flow.stages.length - 1; i++) {
+      var a = flow.stages[i].ops[0],
+        b = flow.stages[i + 1].ops[0];
+      if (a && b && opById[a] && opById[b]) {
+        els.push(
+          edge(
+            "f_" + flow.id + "_" + i,
+            "op_" + flow.id + "_" + a,
+            "op_" + flow.id + "_" + b,
+            "flow",
+          ),
+        );
       }
-      elements.push({
-        data: { id: "t_" + o.id + "_" + slug(tr), source: "op_" + o.id, target: id, kind: "fire" },
+    }
+    return els;
+  }
+
+  // Overview: every flow as a compact horizontal band (label + stage ops).
+  function buildOverview() {
+    var els = [];
+    flows.forEach(function (flow, fi) {
+      var yc = fi * BAND_H + 40;
+      els.push({
+        data: { id: "fl_" + flow.id, flow: flow.id, label: flow.label, kind: "flowlabel" },
+        position: { x: LABEL_X, y: yc },
       });
+      flow.stages.forEach(function (st, si) {
+        var x = si * COL_W;
+        var primary = st.ops[0];
+        var o = primary && opById[primary];
+        if (!o) return;
+        var nid = "op_" + flow.id + "_" + primary;
+        els.push(opNode(nid, o, x, yc));
+      });
+      for (var i = 0; i < flow.stages.length - 1; i++) {
+        var a = flow.stages[i].ops[0],
+          b = flow.stages[i + 1].ops[0];
+        if (a && b && opById[a] && opById[b]) {
+          els.push(
+            edge(
+              "f_" + flow.id + "_" + i,
+              "op_" + flow.id + "_" + a,
+              "op_" + flow.id + "_" + b,
+              "flow",
+            ),
+          );
+        }
+      }
     });
-  });
+    return els;
+  }
 
   // ---- Cytoscape ------------------------------------------------------------
   var cy = cytoscape({
     container: cyEl,
-    elements: elements,
+    elements: [],
     wheelSensitivity: 0.2,
     style: [
       {
-        selector: "node[kind='user']",
+        selector: "node[kind='stage']",
         style: {
           shape: "round-rectangle",
-          "background-color": "data(color)",
-          "background-opacity": 0.04,
-          "border-width": 2,
-          "border-color": "data(color)",
-          "border-opacity": 0.5,
+          width: "data(w)",
+          height: 30,
+          "background-color": C.stage,
+          "background-opacity": 0.14,
+          "border-width": 1,
+          "border-color": C.stage,
           label: "data(label)",
-          color: "data(color)",
-          "text-valign": "top",
-          "text-halign": "left",
-          "text-margin-x": 6,
-          "text-margin-y": -6,
-          "font-size": 16,
+          color: C.stage,
+          "text-valign": "center",
+          "text-halign": "center",
+          "font-size": 12,
           "font-weight": 700,
-          padding: "26px",
+          "text-transform": "uppercase",
         },
       },
       {
-        selector: "node[kind='module']",
+        selector: "node[kind='flowlabel']",
         style: {
           shape: "round-rectangle",
-          "background-color": "data(color)",
-          "background-opacity": 0.07,
+          width: 150,
+          height: 34,
+          "background-color": C.panel,
           "border-width": 1,
-          "border-color": "data(color)",
-          "border-opacity": 0.4,
-          "border-style": "dashed",
+          "border-color": C.border,
           label: "data(label)",
-          color: "data(color)",
-          "text-valign": "top",
-          "text-halign": "left",
-          "text-margin-x": 4,
-          "text-margin-y": -4,
-          "font-size": 11,
+          color: C.text,
+          "text-valign": "center",
+          "text-halign": "center",
+          "font-size": 13,
           "font-weight": 700,
-          "text-transform": "uppercase",
-          padding: "16px",
         },
       },
       {
@@ -214,7 +219,7 @@
         style: {
           shape: "round-rectangle",
           width: "data(w)",
-          height: 34,
+          height: 36,
           "background-color": C.panel,
           "border-width": 2,
           "border-color": "data(color)",
@@ -228,36 +233,20 @@
       },
       {
         selector: "node[kind='op'][planned = 1]",
-        style: { "border-style": "dashed", opacity: 0.7 },
+        style: { "border-style": "dashed", opacity: 0.75 },
       },
       {
-        selector: "node[kind='table']",
+        selector: "node[kind='sub']",
         style: {
           shape: "round-rectangle",
           width: "data(w)",
-          height: 30,
+          height: 24,
           "background-color": "#0f2230",
           "border-width": 1,
           "border-color": C.table,
+          "border-opacity": 0.6,
           label: "data(label)",
           color: C.table,
-          "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
-          "font-size": 11,
-          "text-valign": "center",
-          "text-halign": "center",
-        },
-      },
-      {
-        selector: "node[kind='trigger']",
-        style: {
-          shape: "round-rectangle",
-          width: "data(w)",
-          height: 28,
-          "background-color": "#2b1020",
-          "border-width": 1,
-          "border-color": C.trigger,
-          label: "data(label)",
-          color: C.trigger,
           "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
           "font-size": 10,
           "text-valign": "center",
@@ -265,111 +254,72 @@
         },
       },
       {
-        selector: "edge[kind='write']",
+        selector: "edge[kind='flow']",
         style: {
-          width: 1.6,
+          width: 2.2,
           "line-color": C.accent,
           "target-arrow-color": C.accent,
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
-          "arrow-scale": 0.9,
+          "arrow-scale": 1,
         },
       },
       {
-        selector: "edge[kind='fire']",
+        selector: "edge[kind='data']",
         style: {
-          width: 1.3,
-          "line-color": C.trigger,
+          width: 1,
+          "line-color": C.table,
+          "line-opacity": 0.5,
           "line-style": "dashed",
-          "target-arrow-color": C.trigger,
-          "target-arrow-shape": "triangle",
-          "curve-style": "bezier",
-          "arrow-scale": 0.8,
+          "curve-style": "straight",
+          "target-arrow-shape": "none",
         },
       },
+      { selector: ".dim", style: { opacity: 0.18 } },
     ],
-    layout: { name: "preset", fit: true, padding: 40 },
+    layout: { name: "preset" },
   });
 
-  // Remember the overview positions so "Show all" can restore them.
-  var orig = {};
-  cy.nodes().forEach(function (n) {
-    orig[n.id()] = { x: n.position("x"), y: n.position("y") };
-  });
-
-  // ---- Isolate helpers ------------------------------------------------------
-  function hideAll() {
-    cy.elements().style("display", "none");
-  }
-  function restorePositions() {
-    cy.nodes().forEach(function (n) {
-      var p = orig[n.id()];
-      if (p) n.position(p);
-    });
-  }
-  function column(nodes, x, cy0) {
-    var n = nodes.length;
-    nodes.forEach(function (node, i) {
-      node.position({ x: x, y: cy0 + (i - (n - 1) / 2) * 52 });
-    });
-  }
-
-  function selectOp(id) {
-    var op = cy.getElementById("op_" + id);
-    if (op.empty()) return;
-    var edges = op.connectedEdges();
-    var targets = edges.targets();
-    var tbls = targets.filter("[kind='table']");
-    var trgs = targets.filter("[kind='trigger']");
-    var visible = op.union(edges).union(targets).union(op.ancestors());
-
-    hideAll();
-    visible.style("display", "element");
-    var ox = op.position("x"),
-      oy = op.position("y");
-    column(tbls, ox + 330, oy);
-    column(trgs, ox + 660, oy);
-    cy.fit(visible, 60);
-    renderOpDetail(opById[id]);
-    markNav("op_" + id);
-  }
-
-  function selectTable(name) {
-    var t = cy.getElementById("tbl_" + name);
-    if (t.empty()) return;
-    var edges = t.connectedEdges("[kind='write']");
-    var srcs = edges.sources();
-    var visible = t.union(edges).union(srcs); // bare ops (no compounds) for clarity
-
-    hideAll();
-    visible.style("display", "element");
-    var tx = t.position("x"),
-      tyy = t.position("y");
-    column(srcs, tx - 360, tyy);
-    cy.fit(visible, 60);
-    renderTableDetail(
-      name,
-      srcs.map(function (o) {
-        return o.id().replace(/^op_/, "");
-      }),
-    );
-    markNav(null);
-  }
-
-  function showAll() {
-    cy.elements().style("display", "element");
-    restorePositions();
-    cy.fit(40);
+  // ---- Views ----------------------------------------------------------------
+  function showOverview() {
+    cy.elements().remove();
+    cy.add(buildOverview());
+    cy.fit(50);
     detailEl.innerHTML = PLACEHOLDER;
     markNav(null);
   }
+  function selectFlow(flow) {
+    cy.elements().remove();
+    cy.add(buildFlow(flow));
+    cy.fit(50);
+    renderFlowDetail(flow);
+    markNav(flow.id);
+  }
+  function selectOp(opId) {
+    renderOpDetail(opById[opId]);
+    var sel = cy.nodes("[op = '" + opId + "']");
+    if (sel.nonempty()) {
+      cy.elements().addClass("dim");
+      sel.removeClass("dim");
+      sel.connectedEdges().removeClass("dim");
+    }
+  }
 
   cy.on("tap", "node[kind='op']", function (e) {
-    selectOp(e.target.id().replace(/^op_/, ""));
+    selectOp(e.target.data("op"));
   });
-  cy.on("tap", "node[kind='table']", function (e) {
-    selectTable(e.target.id().replace(/^tbl_/, ""));
+  cy.on("tap", "node[kind='flowlabel']", function (e) {
+    var f = byId(e.target.data("flow"));
+    if (f) selectFlow(f);
   });
+  cy.on("tap", function (e) {
+    if (e.target === cy) cy.elements().removeClass("dim");
+  });
+
+  function byId(id) {
+    for (var i = 0; i < flows.length; i++) if (flows[i].id === id) return flows[i];
+    return null;
+  }
 
   // ---- Sidebar navigator ----------------------------------------------------
   var navButtons = {};
@@ -379,45 +329,44 @@
       navButtons[k].setAttribute("aria-pressed", k === activeId ? "true" : "false");
     });
   }
-  SURF_ORDER.forEach(function (surface) {
-    var surfOps = ops.filter(function (o) {
-      return o.surface === surface;
-    });
-    if (!surfOps.length) return;
-    var role = document.createElement("div");
-    role.className = "nav-role";
-    role.innerHTML =
-      '<div class="nav-role-head"><span class="dot" style="background:' +
-      SURF_COLOR[surface] +
-      '"></span>' +
-      esc(F.surfaces[surface]) +
-      "</div>";
-    Object.keys(F.modules).forEach(function (mkey) {
-      var group = surfOps.filter(function (o) {
-        return o.module === mkey;
+  flows.forEach(function (flow) {
+    var wrap = document.createElement("div");
+    wrap.className = "nav-flow";
+    var planned = flow.stages.every(function (st) {
+      return st.ops.every(function (id) {
+        return opById[id] && opById[id].status === "planned";
       });
-      if (!group.length) return;
-      var mh = document.createElement("div");
-      mh.className = "nav-mod";
-      mh.textContent = F.modules[mkey];
-      role.appendChild(mh);
-      group.forEach(function (o) {
+    });
+    var head = document.createElement("button");
+    head.type = "button";
+    head.className = "nav-flow-head" + (planned ? " planned" : "");
+    head.setAttribute("aria-pressed", "false");
+    head.innerHTML =
+      esc(flow.label) + (planned ? ' <span class="badge planned">planned</span>' : "");
+    head.addEventListener("click", function () {
+      selectFlow(flow);
+    });
+    wrap.appendChild(head);
+    navButtons[flow.id] = head;
+
+    flow.stages.forEach(function (st) {
+      st.ops.forEach(function (opId) {
+        var o = opById[opId];
+        if (!o) return;
         var b = document.createElement("button");
         b.type = "button";
         b.className = "nav-op" + (o.status === "planned" ? " planned" : "");
-        b.style.borderLeftColor = SURF_COLOR[surface];
-        b.setAttribute("aria-pressed", "false");
-        b.innerHTML =
-          esc(o.label) +
-          (o.status === "planned" ? ' <span class="badge planned">planned</span>' : "");
+        b.style.borderLeftColor = SURF_COLOR[o.surface] || C.border;
+        b.innerHTML = '<span class="nav-stage">' + esc(st.label) + "</span>" + esc(o.label);
         b.addEventListener("click", function () {
-          selectOp(o.id);
+          selectFlow(flow);
+          selectOp(opId);
         });
-        role.appendChild(b);
-        navButtons["op_" + o.id] = b;
+        wrap.appendChild(b);
+        navButtons["op_" + flow.id + "_" + opId] = b;
       });
     });
-    navEl.appendChild(role);
+    navEl.appendChild(wrap);
   });
 
   // ---- Detail panel ---------------------------------------------------------
@@ -434,6 +383,31 @@
         .join("") +
       "</div>"
     );
+  }
+  function renderFlowDetail(flow) {
+    var html = "<h2>" + esc(flow.label) + "</h2>";
+    html += "<p class='desc'>" + esc(flow.desc || "") + "</p>";
+    if (flow.note)
+      html += "<div class='kv'><span>Nota</span><span>" + esc(flow.note) + "</span></div>";
+    html += "<h3>Etapas</h3>";
+    flow.stages.forEach(function (st) {
+      html += "<div class='stage-row'><b>" + esc(st.label) + "</b>";
+      st.ops.forEach(function (opId) {
+        var o = opById[opId];
+        if (!o) return;
+        html +=
+          "<button type='button' class='rel-op' data-op='" +
+          esc(opId) +
+          "'>" +
+          esc(o.label) +
+          "<span class='op-rpc'>" +
+          esc(o.rpc || "direct DML") +
+          "</span></button>";
+      });
+      html += "</div>";
+    });
+    detailEl.innerHTML = html;
+    wireRelOps();
   }
   function renderOpDetail(o) {
     if (!o) return;
@@ -455,30 +429,7 @@
     html += "<div class='src'>source: <code>" + esc(o.source) + "</code></div>";
     detailEl.innerHTML = html;
   }
-  function renderTableDetail(name, writers) {
-    var html = "<h2>" + esc(name) + "</h2>";
-    html +=
-      "<div class='sub'>" +
-      (writers.length
-        ? writers.length + " process(es) write this table"
-        : "no writers (read-only here)") +
-      "</div>";
-    if (writers.length) {
-      html += "<h3>Written by</h3>";
-      writers.forEach(function (id) {
-        var o = opById[id];
-        if (!o) return;
-        html +=
-          "<button type='button' class='rel-op' data-op='" +
-          esc(id) +
-          "'>" +
-          esc(o.label) +
-          "<span class='op-rpc'>" +
-          esc(o.rpc || "direct DML") +
-          "</span></button>";
-      });
-    }
-    detailEl.innerHTML = html;
+  function wireRelOps() {
     Array.prototype.forEach.call(detailEl.querySelectorAll(".rel-op"), function (b) {
       b.addEventListener("click", function () {
         selectOp(b.getAttribute("data-op"));
@@ -500,26 +451,62 @@
     zoomBy(1 / 1.2);
   };
   document.getElementById("fit").onclick = function () {
-    cy.fit(40);
+    cy.fit(50);
   };
-  document.getElementById("showAll").onclick = showAll;
+  document.getElementById("showAll").onclick = showOverview;
 
-  // Sidebar search filters the process list.
+  // Sidebar search filters the step buttons by label / rpc / table.
   var searchEl = document.getElementById("search");
   if (searchEl)
     searchEl.addEventListener("input", function () {
       var q = this.value.trim().toLowerCase();
-      ops.forEach(function (o) {
-        var b = navButtons["op_" + o.id];
-        if (!b) return;
-        var hay = (o.label + " " + (o.rpc || "") + " " + (o.writes || []).join(" ")).toLowerCase();
-        b.style.display = !q || hay.indexOf(q) >= 0 ? "" : "none";
+      flows.forEach(function (flow) {
+        flow.stages.forEach(function (st) {
+          st.ops.forEach(function (opId) {
+            var b = navButtons["op_" + flow.id + "_" + opId];
+            var o = opById[opId];
+            if (!b || !o) return;
+            var hay = (
+              o.label +
+              " " +
+              (o.rpc || "") +
+              " " +
+              (o.writes || []).join(" ")
+            ).toLowerCase();
+            b.style.display = !q || hay.indexOf(q) >= 0 ? "" : "none";
+          });
+        });
       });
     });
 
-  // ---- Deep-link from the ER viewer: ?table=<name> --------------------------
-  var deepTable = new URLSearchParams(window.location.search).get("table");
-  if (deepTable && !cy.getElementById("tbl_" + deepTable).empty()) {
-    selectTable(deepTable);
+  // ---- Initial view + deep-link (?flow= / ?table=) --------------------------
+  var params = new URLSearchParams(window.location.search);
+  var deepFlow = params.get("flow");
+  var deepTable = params.get("table");
+  if (deepFlow && byId(deepFlow)) {
+    selectFlow(byId(deepFlow));
+  } else if (deepTable) {
+    // Land on the first flow whose any op writes the table, highlight that step.
+    var hit = null,
+      hitOp = null;
+    flows.forEach(function (flow) {
+      flow.stages.forEach(function (st) {
+        st.ops.forEach(function (opId) {
+          var o = opById[opId];
+          if (!hit && o && (o.writes || []).indexOf(deepTable) >= 0) {
+            hit = flow;
+            hitOp = opId;
+          }
+        });
+      });
+    });
+    if (hit) {
+      selectFlow(hit);
+      selectOp(hitOp);
+    } else {
+      showOverview();
+    }
+  } else {
+    showOverview();
   }
 })();
