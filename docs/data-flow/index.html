@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>x-kairos · data-flow viewer</title>
+    <!-- Graph engine (same major as the ER viewer). -->
+    <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
     <link rel="stylesheet" href="styles/flow.css" />
   </head>
   <body>
@@ -14,33 +16,24 @@
         <input
           id="search"
           type="search"
-          placeholder="Search operation / table…"
-          aria-label="Search operations and tables"
+          placeholder="Search process / table…"
+          aria-label="Search processes and tables"
         />
+        <button class="zoom" id="zoomOut" title="Zoom out">−</button>
+        <button class="zoom" id="zoomIn" title="Zoom in">+</button>
+        <button id="fit">Fit</button>
         <a class="link" href="../er-viewer/index.html">ER viewer →</a>
       </div>
+      <div class="legend" id="legend"></div>
     </header>
 
     <div id="main">
-      <section class="lane" id="lane-surfaces" aria-label="Client surfaces">
-        <h2 class="lane-title">Client</h2>
-        <div class="lane-body" id="surfaces"></div>
-      </section>
-
-      <section class="lane lane-ops" id="lane-ops" aria-label="Supabase operations">
-        <h2 class="lane-title">Supabase · operations</h2>
-        <div class="lane-body" id="ops"></div>
-      </section>
-
-      <section class="lane" id="lane-tables" aria-label="Tables written">
-        <h2 class="lane-title">Tables</h2>
-        <div class="lane-body" id="tables"></div>
-      </section>
-
+      <div id="stage"><div id="cy"></div></div>
       <aside id="detail">
         <p class="placeholder">
-          Click an operation to see its RPC, guards, tables and triggers — or click a table to see
-          which operations write it.
+          Grouped by user ▸ module ▸ process. Arrows show the information each process writes
+          (tables and triggers it fires). Click a process to trace its flow, or a table to see which
+          processes write it.
         </p>
       </aside>
     </div>
