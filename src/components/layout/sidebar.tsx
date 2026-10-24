@@ -75,7 +75,7 @@ export function Sidebar() {
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
                 className={[
-                  "relative grid min-h-11 place-items-center rounded-md transition-colors",
+                  "relative grid min-h-11 place-items-center rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none focus-visible:ring-inset",
                   active
                     ? "bg-primary-surface text-primary"
                     : "text-fg-muted hover:bg-muted hover:text-fg",
@@ -99,7 +99,7 @@ export function Sidebar() {
             disabled={signingOut}
             title="Cerrar sesión"
             aria-label="Cerrar sesión"
-            className="grid min-h-11 w-full place-items-center rounded-md text-fg-muted hover:bg-muted hover:text-fg disabled:opacity-60"
+            className="grid min-h-11 w-full place-items-center rounded-md text-fg-muted hover:bg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none focus-visible:ring-inset disabled:opacity-60"
           >
             <LogoutIcon />
           </button>
@@ -120,7 +120,7 @@ export function Sidebar() {
 
       <nav
         aria-label="Navegación principal"
-        className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3"
+        className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pt-2 pb-3"
       >
         {/* Inicio — standalone */}
         <SidebarLink item={HOME} pathname={pathname} onNavigate={closeSidebar} />
@@ -136,10 +136,18 @@ export function Sidebar() {
                 onClick={() => setOpen((p) => ({ ...p, [group.id]: !p[group.id] }))}
                 aria-expanded={isOpen}
                 className={[
-                  "flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
-                  groupActive ? "text-primary" : "text-fg-muted hover:bg-muted hover:text-fg",
+                  "relative flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none focus-visible:ring-inset",
+                  groupActive
+                    ? "bg-primary-surface text-primary"
+                    : "text-fg-muted hover:bg-muted hover:text-fg",
                 ].join(" ")}
               >
+                {groupActive && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-2 left-0.5 w-1 rounded-full bg-primary"
+                  />
+                )}
                 <GroupIcon />
                 <span className="flex-1 text-left">{group.label}</span>
                 <ChevronDownIcon
@@ -171,14 +179,14 @@ export function Sidebar() {
         </span>
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="truncate text-sm font-medium text-fg">{name}</span>
-          <span className="truncate text-xs text-fg-muted">{email || role}</span>
+          <span className="truncate text-xs text-fg-muted">{role}</span>
         </div>
         <button
           type="button"
           onClick={onSignOut}
           disabled={signingOut}
           aria-label="Cerrar sesión"
-          className="grid min-h-11 min-w-11 place-items-center rounded-md text-fg-muted hover:bg-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
+          className="grid min-h-11 min-w-11 place-items-center rounded-md text-fg-muted hover:bg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-60"
         >
           {signingOut ? (
             <span className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-fg-muted border-t-transparent" />
@@ -209,17 +217,14 @@ function SidebarLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={[
-        "relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors",
+        "relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none focus-visible:ring-inset",
         active
           ? "bg-primary-surface font-medium text-primary"
           : "text-fg-muted hover:bg-muted hover:text-fg",
       ].join(" ")}
     >
       {active && (
-        <span
-          aria-hidden
-          className="absolute top-1.5 bottom-1.5 left-0 w-1 rounded-r-full bg-primary"
-        />
+        <span aria-hidden className="absolute inset-y-2 -left-1.5 w-1 rounded-full bg-primary" />
       )}
       <Icon />
       <span>{item.label}</span>

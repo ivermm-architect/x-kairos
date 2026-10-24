@@ -17,6 +17,7 @@ type Theme = "light" | "dark";
 
 const PINK = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"] as const;
 const NEUTRAL = PINK;
+const SLATE = ["400", "500", "600", "700", "800", "900", "950"] as const;
 
 const SEMANTIC = [
   "primary",
@@ -34,6 +35,7 @@ const SEMANTIC = [
   "danger-surface",
   "bg-app",
   "bg-surface",
+  "bg-sidebar",
   "bg-muted",
   "border",
   "border-strong",
@@ -235,6 +237,15 @@ export default function DesignSystemPage() {
           <div className="grid grid-cols-5 gap-[var(--sp-3)] sm:grid-cols-10">
             {NEUTRAL.map((s) => (
               <Swatch key={s} label={`neutral-${s}`} value={`var(--neutral-${s})`} />
+            ))}
+          </div>
+        </Section>
+
+        {/* Slate ramp — dark surfaces */}
+        <Section title="Slate ramp (dark surfaces)">
+          <div className="grid grid-cols-5 gap-[var(--sp-3)] sm:grid-cols-7">
+            {SLATE.map((s) => (
+              <Swatch key={s} label={`slate-${s}`} value={`var(--slate-${s})`} />
             ))}
           </div>
         </Section>

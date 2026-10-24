@@ -10,6 +10,7 @@
 @theme inline {
   --color-app: var(--bg-app);
   --color-surface: var(--bg-surface);
+  --color-sidebar: var(--bg-sidebar);
   --color-muted: var(--bg-muted);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
@@ -55,8 +56,12 @@ body {
   line-height: var(--leading-normal);
 }
 
-/* Visible focus for keyboard users (a11y: never remove the ring). */
-:focus-visible {
-  outline: var(--focus-ring-width) solid var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
+/* Visible focus for keyboard users (a11y: never remove the ring). Kept in the
+   base layer so components can opt into a tighter ring (e.g. an inset ring in
+   the sidebar) via utilities, which win over base in the cascade. */
+@layer base {
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
 }
