@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Button, Field, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth/context";
 import { postLoginRedirect } from "@/lib/auth/post-login";
 import { consumeSessionExpired, SESSION_EXPIRED_EVENT } from "@/lib/auth/safe-session";
@@ -15,21 +16,23 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-// Sign-in route (/login). The (auth) layout owns the centered shell, so this
-// page is just the card. On a live staff session it bounces to the admin root.
+// Sign-in route (/login). The (auth) layout owns the shell (centered card on
+// mobile, split with a brand panel on lg+); this page is just the card. A live
+// staff session bounces to the admin root.
 export default function LoginPage() {
   const { signIn, session, isStaff, loading } = useAuth();
   const router = useRouter();
   const [expired, setExpired] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Already signed in as staff → leave the login screen.
   useEffect(() => {
     if (!loading && session && isStaff) router.replace("/");
   }, [loading, session, isStaff, router]);
 
-  // A background session expiry (orphaned token cleaned by safeGetSession)
-  // leaves a one-shot flag; show it here. Also react to the live event in case
-  // it fires while this screen is mounted.
+  // A background session expiry (orphaned token cleaned by safeGetSession) leaves
+  // a one-shot flag; show it here. Also react to the live event in case it fires
+  // while this screen is mounted.
   useEffect(() => {
     const fire = () => {
       if (consumeSessionExpired()) setExpired(true);
@@ -59,8 +62,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-card">
-      <h1 className="text-xl font-bold text-fg">Iniciar sesión</h1>
+    <main className="w-full md:max-w-sm md:rounded-2xl md:bg-surface md:p-8 md:shadow-card">
+      {/* Brand mark — magenta wordmark, tokens only. */}
+      <div className="mb-6 flex items-center gap-2">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary font-bold text-on-brand">
+          K
+        </span>
+        <span className="text-lg font-bold text-fg">Kairos</span>
+      </div>
+
+      <h1 className="text-2xl font-bold text-fg">Iniciar sesión</h1>
       <p className="mt-1 text-sm text-fg-muted">Accede con tu cuenta de personal.</p>
 
       {expired && (
@@ -76,55 +87,83 @@ export default function LoginPage() {
           </p>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-fg">
-            Correo
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-            className="min-h-[44px] w-full rounded-md border border-border bg-surface px-3 text-fg placeholder:text-fg-muted focus-visible:border-primary"
-            {...register("email")}
-          />
-          {errors.email && (
-            <span role="alert" className="text-xs text-danger">
-              {errors.email.message}
-            </span>
+        <Field label="Correo" error={errors.email?.message}>
+          {({ id, describedBy, invalid }) => (
+            <Input
+              id={id}
+              type="email"
+              autoComplete="email"
+              placeholder="tu@correo.com"
+              aria-describedby={describedBy}
+              invalid={invalid}
+              {...register("email")}
+            />
           )}
-        </div>
+        </Field>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-fg">
-            Contraseña
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={Boolean(errors.password)}
-            className="min-h-[44px] w-full rounded-md border border-border bg-surface px-3 text-fg placeholder:text-fg-muted focus-visible:border-primary"
-            {...register("password")}
-          />
-          {errors.password && (
-            <span role="alert" className="text-xs text-danger">
-              {errors.password.message}
-            </span>
+        <Field label="Contraseña" error={errors.password?.message}>
+          {({ id, describedBy, invalid }) => (
+            <div className="relative">
+              <Input
+                id={id}
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                aria-describedby={describedBy}
+                invalid={invalid}
+                className="pr-11"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                className="absolute inset-y-0 right-0 inline-flex min-h-11 w-11 items-center justify-center rounded-md text-fg-muted hover:text-fg"
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
           )}
-        </div>
+        </Field>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md bg-primary px-4 font-semibold text-on-brand transition-colors hover:bg-primary-hover active:bg-primary-active disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting && (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-brand border-t-transparent" />
-          )}
+        <Button type="submit" size="lg" loading={isSubmitting} className="mt-2 w-full">
           {isSubmitting ? "Entrando…" : "Entrar"}
-        </button>
+        </Button>
       </form>
     </main>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a18 18 0 0 1-3.1 3.95M6.6 6.6A18 18 0 0 0 2 12s3.5 7 10 7a9.3 9.3 0 0 0 4.4-1.1" />
+      <path d="M3 3l18 18" />
+    </svg>
   );
 }
