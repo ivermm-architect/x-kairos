@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useUiStore, readStoredTheme } from "@/lib/store/ui";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -18,6 +18,7 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const closeSidebar = useUiStore((s) => s.closeSidebar);
+  const drawerRef = useRef<HTMLElement>(null);
 
   // Hydrate the persisted theme after mount. Done here (not in the store's
   // initial state) so the first client render matches the server and React
@@ -41,6 +42,12 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [sidebarOpen, closeSidebar]);
+
+  // Move focus into the drawer when it opens so keyboard users land inside the
+  // trap (the main column is inert while open).
+  useEffect(() => {
+    if (sidebarOpen) drawerRef.current?.focus();
+  }, [sidebarOpen]);
 
   return (
     <div className="flex min-h-dvh bg-app">
@@ -66,9 +73,11 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
         aria-hidden
       />
       <aside
+        ref={drawerRef}
+        tabIndex={-1}
         inert={!sidebarOpen}
         className={[
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-border bg-surface transition-transform lg:hidden",
+          "fixed inset-y-0 left-0 z-40 w-72 border-r border-border bg-surface transition-transform outline-none lg:hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
@@ -77,8 +86,9 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
         </div>
       </aside>
 
-      {/* Main column */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Main column. Marked inert while the mobile drawer is open so keyboard
+          focus stays trapped in the drawer (the backdrop already blocks clicks). */}
+      <div className="flex min-w-0 flex-1 flex-col" inert={sidebarOpen}>
         <Topbar title={title} />
         <main className="flex-1 overflow-x-hidden p-4 pb-[env(safe-area-inset-bottom)]">
           {children}
