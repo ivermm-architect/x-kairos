@@ -16,7 +16,10 @@ export function Providers({ children }: { children: ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { staleTime: 60_000, refetchOnWindowFocus: false },
+          // One short retry smooths transient network blips; mutations never
+          // auto-retry (a failed write must surface to the user, not repeat).
+          queries: { staleTime: 60_000, refetchOnWindowFocus: false, retry: 1 },
+          mutations: { retry: 0 },
         },
       }),
   );
