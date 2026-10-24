@@ -49,12 +49,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           style={{ backgroundImage: "url(/brand/login-cover.avif)" }}
           aria-hidden
         />
-        {/* Light scrim — keep the photo readable without washing it out. */}
+        {/* Magenta tint — same brand treatment as the desktop panel. */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, color-mix(in srgb, var(--neutral-900) 8%, transparent) 0%, color-mix(in srgb, var(--neutral-900) 30%, transparent) 100%)",
+              "linear-gradient(180deg, color-mix(in srgb, var(--primary) 30%, transparent) 0%, color-mix(in srgb, var(--primary-active) 82%, transparent) 100%)",
           }}
           aria-hidden
         />

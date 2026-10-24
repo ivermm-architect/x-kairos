@@ -39,6 +39,18 @@
   --neutral-800: #232530;
   --neutral-900: #1b1d29;
 
+  /* ----- Primitives — slate ramp (cool blue-gray dark surfaces) ----------- *
+   * The dark theme's stepped surfaces/borders. Not used directly — the dark
+   * semantic layer maps onto these so every dark value is a named primitive,
+   * not a loose literal. Lightness decreases 400 → 950. */
+  --slate-400: #6d7a8c;
+  --slate-500: #3c4a5a;
+  --slate-600: #2b3643;
+  --slate-700: #212b37;
+  --slate-800: #182029;
+  --slate-900: #10151d;
+  --slate-950: #0b0f16;
+
   /* ----- Primitives — status ramps ---------------------------------------- */
   --mint-50: #e7fbee;
   --mint-300: #6fd98a;
@@ -105,9 +117,11 @@
    * ======================================================================= */
   --bg-app: #fafafa;
   --bg-surface: var(--neutral-0);
+  --bg-sidebar: var(--neutral-0); /* nav surface — matches surface in light */
   --bg-muted: #f2f2f4;
   --border: #ececef;
   --border-strong: #dcdce1;
+  --border-chrome: var(--border); /* topbar/sidebar seams — visible in light */
   --overlay: rgba(27, 29, 41, 0.5); /* modal/drawer scrim */
 
   --text: var(--neutral-900); /* #1b1d29 on #fafafa ≈ 15:1 (AAA) */
@@ -147,11 +161,13 @@
 :root[data-theme="dark"] {
   /* Cool slate — professional blue-gray undertone, not black. Surfaces are
      clearly stepped so the admin dashboard has depth and hierarchy. */
-  --bg-app: #0b0f16;
-  --bg-surface: #182029;
-  --bg-muted: #212b37;
-  --border: #2b3643;
-  --border-strong: #3c4a5a;
+  --bg-app: var(--slate-950);
+  --bg-surface: var(--slate-800);
+  --bg-sidebar: var(--slate-900); /* nav surface — one step darker than the topbar */
+  --bg-muted: var(--slate-700);
+  --border: var(--slate-600);
+  --border-strong: var(--slate-500);
+  --border-chrome: var(--bg-sidebar); /* dark: blends into the chrome — no visible seam */
   --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
   --text: #eef2f8;
@@ -187,11 +203,13 @@
 /* Follow the OS when no explicit theme is set. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-app: #0f141c;
-    --bg-surface: #182029;
-    --bg-muted: #212b37;
-    --border: #2b3643;
-    --border-strong: #3c4a5a;
+    --bg-app: var(--slate-950);
+    --bg-surface: var(--slate-800);
+    --bg-sidebar: var(--slate-900); /* nav surface — one step darker than the topbar */
+    --bg-muted: var(--slate-700);
+    --border: var(--slate-600);
+    --border-strong: var(--slate-500);
+    --border-chrome: var(--bg-sidebar); /* dark: blends into the chrome — no visible seam */
     --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
     --text: #eef2f8;

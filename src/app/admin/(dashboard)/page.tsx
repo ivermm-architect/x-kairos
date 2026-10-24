@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 // Back-office dashboard, served at /admin (ADR 0004: storefront owns "/",
-// back-office lives under /admin). Rendered behind the session + role gate
-// via admin/layout.tsx. Placeholder entry point; the real dashboard lands later.
+// back-office lives under /admin). Rendered inside the AppShell frame (which
+// owns the <main>) and behind the session + role gate. Placeholder entry
+// point; the real dashboard lands later.
 export default function AdminHome() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-6 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">x-kairos · back-office</h1>
         <p className="max-w-prose text-sm text-fg-muted">
@@ -28,6 +29,6 @@ export default function AdminHome() {
           Public storefront →
         </Link>
       </nav>
-    </main>
+    </div>
   );
 }
