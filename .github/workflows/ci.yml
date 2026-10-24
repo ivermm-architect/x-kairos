@@ -38,8 +38,17 @@ jobs:
 
       # Build first: Next generates its global helper types (LayoutProps,
       # PageProps, ...) into .next/types, which the standalone type-check needs.
+      #
+      # The static export prerenders every page at build time, including the
+      # admin shell wrapped in <AuthProvider>, which constructs the Supabase
+      # browser client. Only NEXT_PUBLIC_* (non-secret, build-time) vars are
+      # needed and placeholders suffice: the client just constructs here — its
+      # network calls live in effects that run only in the browser.
       - name: Build
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
       - name: Type-check
         run: npx tsc --noEmit
