@@ -1613,6 +1613,8 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_reason: string | null
+          cost_currency: string
+          cost_exchange_rate: number | null
           created_at: string
           created_by: string
           dim_document_url: string | null
@@ -1633,6 +1635,8 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           cancelled_reason?: string | null
+          cost_currency?: string
+          cost_exchange_rate?: number | null
           created_at?: string
           created_by: string
           dim_document_url?: string | null
@@ -1653,6 +1657,8 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           cancelled_reason?: string | null
+          cost_currency?: string
+          cost_exchange_rate?: number | null
           created_at?: string
           created_by?: string
           dim_document_url?: string | null
@@ -1702,6 +1708,7 @@ export type Database = {
           quantity: number
           stock_entry_id: string
           unit_cost: number
+          unit_cost_base: number
           unit_id: string
           units_per_box: number | null
           updated_at: string
@@ -1714,6 +1721,7 @@ export type Database = {
           quantity: number
           stock_entry_id: string
           unit_cost?: number
+          unit_cost_base?: number
           unit_id: string
           units_per_box?: number | null
           updated_at?: string
@@ -1726,6 +1734,7 @@ export type Database = {
           quantity?: number
           stock_entry_id?: string
           unit_cost?: number
+          unit_cost_base?: number
           unit_id?: string
           units_per_box?: number | null
           updated_at?: string
@@ -2356,6 +2365,10 @@ export type Database = {
         Returns: string
       }
       _emit_sale_exit: { Args: { p_sale_id: string }; Returns: undefined }
+      _emit_stock_entry: {
+        Args: { p_entry_id: string; p_user: string }
+        Returns: undefined
+      }
       _insert_sale_items: {
         Args: { p_items: Json; p_sale_id: string; p_warehouse_id: string }
         Returns: number
@@ -2393,7 +2406,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approve_stock_entry: {
+        Args: { p_entry_id: string; p_user: string }
+        Returns: undefined
+      }
       assert_staff: { Args: never; Returns: undefined }
+      cancel_stock_entry: {
+        Args: { p_entry_id: string; p_reason: string; p_user: string }
+        Returns: undefined
+      }
       close_cash_session: {
         Args: {
           p_actual_amount: number
@@ -2531,6 +2552,22 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      correct_stock_entry: {
+        Args: {
+          p_correct_id: string
+          p_cost_currency?: string
+          p_created_by: string
+          p_dim_document_url?: string
+          p_dim_number: string
+          p_entry_date?: string
+          p_lines: Json
+          p_notes: string
+          p_reason?: string
+          p_reference: string
+          p_warehouse_id: string
+        }
+        Returns: string
       }
       create_cash_register: {
         Args: { p_name: string; p_warehouse_id: string }
@@ -2871,6 +2908,45 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      register_stock_entry: {
+        Args: {
+          p_cost_currency?: string
+          p_created_by: string
+          p_dim_document_url?: string
+          p_dim_number: string
+          p_entry_date?: string
+          p_lines: Json
+          p_notes: string
+          p_reference: string
+          p_status: string
+          p_warehouse_id: string
+        }
+        Returns: string
+      }
+      set_initial_cost: {
+        Args: {
+          p_cost: number
+          p_cost_currency?: string
+          p_product_id: string
+          p_user: string
+        }
+        Returns: undefined
+      }
+      update_stock_entry: {
+        Args: {
+          p_cost_currency?: string
+          p_dim_document_url: string
+          p_dim_number: string
+          p_entry_date: string
+          p_entry_id: string
+          p_lines: Json
+          p_notes: string
+          p_reference: string
+          p_status: string
+          p_warehouse_id: string
+        }
+        Returns: string
+      }
       update_web_order_status: {
         Args: { p_id: string; p_status: string }
         Returns: {
@@ -2947,6 +3023,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      void_stock_entry: {
+        Args: { p_entry_id: string; p_reason: string; p_user: string }
+        Returns: undefined
       }
     }
     Enums: {

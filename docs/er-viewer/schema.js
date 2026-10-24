@@ -193,6 +193,8 @@ window.__SCHEMA__ = {
         { "name": "cancelled_at", "type": "timestamptz", "nullable": true, "pk": false, "fk": false, "description": "When the entry was cancelled; null while active." },
         { "name": "cancelled_by", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Staff member who cancelled it; SET NULL if removed." },
         { "name": "cancelled_reason", "type": "text", "nullable": true, "pk": false, "fk": false, "description": "Why it was cancelled." },
+        { "name": "cost_currency", "type": "text", "nullable": false, "pk": false, "fk": false, "description": "Currency the line unit_cost values were entered in; nationalized to base via cost_exchange_rate (#52)." },
+        { "name": "cost_exchange_rate", "type": "numeric(18,6)", "nullable": true, "pk": false, "fk": false, "description": "Frozen base-per-unit rate applied to this entry's costs at closing; null until a cost is captured (#52)." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "When the entry was created." },
         { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Last modification; maintained by trigger." }
       ]
@@ -208,7 +210,8 @@ window.__SCHEMA__ = {
         { "name": "quantity", "type": "numeric(16,2)", "nullable": false, "pk": false, "fk": false, "description": "Quantity received in the chosen unit; must be > 0." },
         { "name": "units_per_box", "type": "numeric(14,2)", "nullable": true, "pk": false, "fk": false, "description": "Base units per received unit (conversion factor); > 0 when present." },
         { "name": "location_id", "type": "uuid", "nullable": true, "pk": false, "fk": true, "description": "Optional destination location; SET NULL if removed." },
-        { "name": "unit_cost", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Per-unit cost in the store base currency; must be >= 0." },
+        { "name": "unit_cost", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Per-unit cost in the entry's cost_currency; must be >= 0." },
+        { "name": "unit_cost_base", "type": "numeric(16,4)", "nullable": false, "pk": false, "fk": false, "description": "Per-base-unit cost nationalized to base: round(unit_cost * cost_exchange_rate / factor, 4). Drives products.cost + valuation (#52)." },
         { "name": "created_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "When the line was created." },
         { "name": "updated_at", "type": "timestamptz", "nullable": false, "pk": false, "fk": false, "description": "Last modification; maintained by trigger." }
       ]
