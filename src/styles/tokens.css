@@ -108,6 +108,7 @@
   --bg-muted: #f2f2f4;
   --border: #ececef;
   --border-strong: #dcdce1;
+  --overlay: rgba(27, 29, 41, 0.5); /* modal/drawer scrim */
 
   --text: var(--neutral-900); /* #1b1d29 on #fafafa ≈ 15:1 (AAA) */
   --text-muted: #6a6f7d; /* on #fafafa ≈ 4.8:1 — passes AA for normal text */
@@ -151,6 +152,7 @@
   --bg-muted: #212b37;
   --border: #2b3643;
   --border-strong: #3c4a5a;
+  --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
   --text: #eef2f8;
   --text-muted: #94a0b2;
@@ -190,6 +192,7 @@
     --bg-muted: #212b37;
     --border: #2b3643;
     --border-strong: #3c4a5a;
+    --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
     --text: #eef2f8;
     --text-muted: #94a0b2;

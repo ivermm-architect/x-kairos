@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>x-kairos · data-flow viewer</title>
+    <!-- Graph engine (same major as the ER viewer). -->
+    <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="styles/flow.css" />
+  </head>
+  <body>
+    <header>
+      <h1>x-kairos · data flow</h1>
+      <span class="meta" id="meta"></span>
+      <div class="controls">
+        <input
+          id="search"
+          type="search"
+          placeholder="Search process / table…"
+          aria-label="Search processes and tables"
+        />
+        <button class="zoom" id="zoomOut" title="Zoom out">−</button>
+        <button class="zoom" id="zoomIn" title="Zoom in">+</button>
+        <button id="fit">Fit</button>
+        <button id="showAll">All flows</button>
+        <a class="link" href="../er-viewer/index.html">ER viewer →</a>
+      </div>
+      <div class="legend" id="legend"></div>
+    </header>
+
+    <div id="main">
+      <nav id="nav" aria-label="Business flows"></nav>
+      <div id="stage"><div id="cy"></div></div>
+      <aside id="detail">
+        <p class="placeholder">
+          Business flows as staged pipelines (Ventas ▸ Caja ▸ Pedido web ▸ Inventario). This
+          overview stacks every flow; pick one in the sidebar to expand its stages and see the
+          tables each step writes. Click a step for its full characteristics.
+        </p>
+      </aside>
+    </div>
+
+    <div id="empty">
+      <h2>No flows yet</h2>
+      <p><code>flows.js</code> has no operations. Curate the dataset and reload.</p>
+    </div>
+
+    <!-- Curated dataset (hand-maintained from the migrations). -->
+    <script src="flows.js"></script>
+    <!-- Viewer (plain globals so it runs from file:// without a bundler). -->
+    <script src="src/flow.js"></script>
+  </body>
+</html>
