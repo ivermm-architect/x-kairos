@@ -22,9 +22,9 @@ export default function LoginPage() {
   const router = useRouter();
   const [expired, setExpired] = useState(false);
 
-  // Already signed in as staff → leave the login screen.
+  // Already signed in as staff → go straight to the back-office.
   useEffect(() => {
-    if (!loading && session && isStaff) router.replace("/");
+    if (!loading && session && isStaff) router.replace("/admin");
   }, [loading, session, isStaff, router]);
 
   // A background session expiry (orphaned token cleaned by safeGetSession)
