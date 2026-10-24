@@ -78,6 +78,12 @@
           ")</span></div>";
       });
     }
+    html +=
+      '<h3>Data flow</h3><a class="flow-link" href="../data-flow/index.html?table=' +
+      encodeURIComponent(name) +
+      '">See operations that write ' +
+      esc(name) +
+      " →</a>";
     detailEl.innerHTML = html;
   };
 
