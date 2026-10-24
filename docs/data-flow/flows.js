@@ -49,6 +49,8 @@ window.__FLOWS__ = {
     {
       id: "is_active_staff",
       label: "Resolve staff flag",
+      es: "Verificar staff activo",
+      does: "Resuelve si el usuario es personal activo; es la base de todas las políticas RLS.",
       module: "auth",
       surface: "pos",
       rpc: "is_active_staff()",
@@ -68,6 +70,8 @@ window.__FLOWS__ = {
     {
       id: "open_cash_session",
       label: "Open cash session",
+      es: "Abrir caja",
+      does: "Abre la sesión de caja con el fondo inicial contado (una sesión abierta por registradora).",
       module: "cash",
       surface: "pos",
       rpc: "open_cash_session(...)",
@@ -84,6 +88,8 @@ window.__FLOWS__ = {
     {
       id: "close_cash_session",
       label: "Close cash session",
+      es: "Cerrar caja",
+      does: "Concilia lo contado contra lo esperado (en moneda base) y registra la diferencia.",
       module: "cash",
       surface: "pos",
       rpc: "close_cash_session(...)",
@@ -100,6 +106,8 @@ window.__FLOWS__ = {
     {
       id: "add_cash_movement",
       label: "Add cash movement",
+      es: "Movimiento de caja",
+      does: "Registra ingreso / egreso / reembolso en la sesión abierta; congela el tipo de cambio y guarda el monto base.",
       module: "cash",
       surface: "pos",
       rpc: "add_cash_movement(...)",
@@ -119,6 +127,8 @@ window.__FLOWS__ = {
     {
       id: "register_sale",
       label: "Register sale",
+      es: "Registrar venta",
+      does: "Cotiza cada línea en el servidor, descuenta stock FIFO y emite kardex de salida; congela el tipo de cambio.",
       module: "sales",
       surface: "pos",
       rpc: "register_sale(...)",
@@ -136,6 +146,8 @@ window.__FLOWS__ = {
     {
       id: "deliver_order",
       label: "Deliver order (deferred)",
+      es: "Entregar pedido",
+      does: "Libera el stock FIFO de una venta en modo pedido al momento de la entrega (pendiente → completada).",
       module: "sales",
       surface: "pos",
       rpc: "deliver_order(p_sale_id uuid)",
@@ -152,6 +164,8 @@ window.__FLOWS__ = {
     {
       id: "void_sale",
       label: "Void sale",
+      es: "Anular venta",
+      does: "Cancela la venta, devuelve el stock a sus lotes y reversa el kardex y el cobro en caja (en base).",
       module: "sales",
       surface: "admin",
       rpc: "void_sale(p_sale_id uuid, p_reason text)",
@@ -170,6 +184,8 @@ window.__FLOWS__ = {
     {
       id: "register_credit_payment",
       label: "Register credit payment",
+      es: "Cobrar crédito",
+      does: "Abona una cuota a una venta a crédito, recalcula el saldo pendiente y la registra en caja.",
       module: "credit",
       surface: "pos",
       rpc: "register_credit_payment(...)",
@@ -189,6 +205,8 @@ window.__FLOWS__ = {
     {
       id: "create_quotation",
       label: "Create quotation",
+      es: "Crear cotización",
+      does: "Genera una cotización numerada con precios de servidor; no toca stock ni caja.",
       module: "quotations",
       surface: "pos",
       rpc: "create_quotation(...)",
@@ -205,6 +223,8 @@ window.__FLOWS__ = {
     {
       id: "convert_quotation_to_sale",
       label: "Convert quotation → sale",
+      es: "Convertir cotización",
+      does: "Pasa las líneas de la cotización a una venta (salida FIFO + cobro) y la marca como convertida.",
       module: "quotations",
       surface: "pos",
       rpc: "convert_quotation_to_sale(...)",
@@ -231,6 +251,8 @@ window.__FLOWS__ = {
     {
       id: "register_return",
       label: "Register return",
+      es: "Registrar devolución",
+      does: "Valida contra la venta original, reingresa al stock lo que está bueno y reembolsa en caja (en base).",
       module: "returns",
       surface: "pos",
       rpc: "register_return(...)",
@@ -261,6 +283,8 @@ window.__FLOWS__ = {
     {
       id: "public_warehouses",
       label: "List pickup warehouses",
+      es: "Listar almacenes",
+      does: "Proyección pública de solo lectura de los almacenes activos para el selector de retiro.",
       module: "web",
       surface: "storefront",
       rpc: "public_warehouses()",
@@ -278,6 +302,8 @@ window.__FLOWS__ = {
     {
       id: "create_web_order",
       label: "Create web order",
+      es: "Crear pedido web",
+      does: "Pedido público con precios del catálogo (nunca del cliente), idempotente; sin efecto en stock ni caja.",
       module: "web",
       surface: "storefront",
       rpc: "create_web_order(...)",
@@ -296,6 +322,8 @@ window.__FLOWS__ = {
     {
       id: "update_web_order_status",
       label: "Advance web order status",
+      es: "Avanzar estado",
+      does: "Máquina de estados solo-staff: pendiente → confirmado → preparando → listo → entregado | cancelado.",
       module: "web",
       surface: "admin",
       rpc: "update_web_order_status(p_id uuid, p_status text)",
@@ -313,6 +341,8 @@ window.__FLOWS__ = {
     {
       id: "convert_web_order_to_sale",
       label: "Convert web order → sale",
+      es: "Facturar pedido web",
+      does: "Resuelve o crea el cliente y factura el pedido como venta (salida FIFO), enlazando pedido ↔ venta.",
       module: "web",
       surface: "admin",
       rpc: "convert_web_order_to_sale(...)",
@@ -341,6 +371,8 @@ window.__FLOWS__ = {
     {
       id: "stock_entry",
       label: "Receive stock entry",
+      es: "Recepción de stock",
+      does: "PLANNED: crearía los lotes FIFO y el kardex de entrada; el RPC aún no existe en las migraciones.",
       module: "inventory",
       surface: "admin",
       rpc: null,
@@ -357,6 +389,8 @@ window.__FLOWS__ = {
     {
       id: "transfer",
       label: "Inter-warehouse transfer",
+      es: "Transferencia entre almacenes",
+      does: "PLANNED: movería stock entre almacenes en tránsito (borrador → enviado → cerrado); RPC ausente.",
       module: "inventory",
       surface: "admin",
       rpc: null,
@@ -380,6 +414,8 @@ window.__FLOWS__ = {
     {
       id: "defective_relocate",
       label: "Defective / relocate",
+      es: "Defectuoso / reubicación",
+      does: "PLANNED: ajuste o baja de stock por defecto o reubicación; el RPC aún no existe.",
       module: "inventory",
       surface: "admin",
       rpc: null,

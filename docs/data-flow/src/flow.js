@@ -62,11 +62,12 @@
   }
 
   // ---- Layout constants -----------------------------------------------------
-  var COL_W = 300; // stage column width
+  var COL_W = 320; // stage column width
   var STAGE_Y = 0; // stage header row
-  var OP_Y0 = 96; // first op under its stage header
-  var OP_STEP = 118; // vertical gap between stacked (alternative) ops
-  var SUB_DY = 44; // writes sub-node under its op
+  var OP_Y0 = 100; // first op under its stage header
+  var OP_STEP = 164; // vertical gap between stacked (alternative) ops
+  var CAP_DY = 36; // Spanish action caption under its op
+  var SUB_DY = 78; // writes sub-node under its op
   var BAND_H = 150; // overview: vertical space per flow row
   var LABEL_X = -220; // overview: flow label column
 
@@ -78,23 +79,30 @@
     };
   }
   function opNode(id, o, x, y) {
+    var lbl = o.es || o.label;
     return {
       data: {
         id: id,
         op: o.id,
-        label: o.label,
+        label: lbl,
         kind: "op",
         color: SURF_COLOR[o.surface] || C.accent,
         planned: o.status === "planned" ? 1 : 0,
-        w: width(o.label, 7.2, 150),
+        w: width(lbl, 7.2, 150),
       },
       position: { x: x, y: y },
     };
   }
-  function subNode(id, writes, x, y) {
-    var txt = truncWrites(writes) || "no table writes";
+  function capNode(id, text, x, y) {
     return {
-      data: { id: id, label: txt, kind: "sub", w: width(txt, 6.4, 120) },
+      data: { id: id, label: text, kind: "cap" },
+      position: { x: x, y: y },
+    };
+  }
+  function subNode(id, writes, x, y) {
+    var txt = "escribe: " + (truncWrites(writes) || "sin escritura de tablas");
+    return {
+      data: { id: id, label: txt, kind: "sub", w: width(txt, 6.4, 140) },
       position: { x: x, y: y },
     };
   }
@@ -114,6 +122,7 @@
         var y = OP_Y0 + oi * OP_STEP;
         var nid = "op_" + flow.id + "_" + opId;
         els.push(opNode(nid, o, x, y));
+        if (o.does) els.push(capNode("cap_" + flow.id + "_" + opId, o.does, x, y + CAP_DY));
         var sid = "sub_" + flow.id + "_" + opId;
         els.push(subNode(sid, o.writes, x, y + SUB_DY));
         els.push(edge("d_" + nid, nid, sid, "data"));
@@ -234,6 +243,24 @@
       {
         selector: "node[kind='op'][planned = 1]",
         style: { "border-style": "dashed", opacity: 0.75 },
+      },
+      {
+        selector: "node[kind='cap']",
+        style: {
+          shape: "rectangle",
+          width: 240,
+          height: 34,
+          "background-opacity": 0,
+          "border-width": 0,
+          label: "data(label)",
+          color: C.muted,
+          "text-wrap": "wrap",
+          "text-max-width": 236,
+          "font-size": 9.5,
+          "text-valign": "center",
+          "text-halign": "center",
+          events: "no",
+        },
       },
       {
         selector: "node[kind='sub']",
@@ -357,7 +384,7 @@
         b.type = "button";
         b.className = "nav-op" + (o.status === "planned" ? " planned" : "");
         b.style.borderLeftColor = SURF_COLOR[o.surface] || C.border;
-        b.innerHTML = '<span class="nav-stage">' + esc(st.label) + "</span>" + esc(o.label);
+        b.innerHTML = '<span class="nav-stage">' + esc(st.label) + "</span>" + esc(o.es || o.label);
         b.addEventListener("click", function () {
           selectFlow(flow);
           selectOp(opId);
@@ -399,7 +426,7 @@
           "<button type='button' class='rel-op' data-op='" +
           esc(opId) +
           "'>" +
-          esc(o.label) +
+          esc(o.es || o.label) +
           "<span class='op-rpc'>" +
           esc(o.rpc || "direct DML") +
           "</span></button>";
@@ -411,7 +438,7 @@
   }
   function renderOpDetail(o) {
     if (!o) return;
-    var html = "<h2>" + esc(o.label) + "</h2>";
+    var html = "<h2>" + esc(o.es || o.label) + "</h2>";
     html +=
       "<div class='sub'>" +
       esc(F.modules[o.module] || o.module) +
@@ -419,6 +446,7 @@
       esc(F.surfaces[o.surface] || o.surface) +
       (o.status === "planned" ? " · <span class='badge planned'>planned</span>" : "") +
       "</div>";
+    if (o.does) html += "<p class='desc'>" + esc(o.does) + "</p>";
     html += "<h3>Signature</h3><pre class='sig'>" + esc(o.signature) + "</pre>";
     html += "<div class='kv'><span>Security</span><code>" + esc(o.security) + "</code></div>";
     html += "<div class='kv'><span>Guard</span><code>" + esc(o.guard) + "</code></div>";
