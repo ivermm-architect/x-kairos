@@ -76,7 +76,7 @@ export function Topbar({ title }: { title?: string }) {
   const initial = (email || "K").charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-14 items-center gap-2 border-b border-[var(--border-chrome)] bg-surface px-3 pt-[env(safe-area-inset-top)] sm:gap-3 sm:px-4">
+    <header className="sticky top-0 z-30 flex min-h-14 items-center gap-2 border-b border-[var(--border-chrome)] bg-sidebar px-3 pt-[env(safe-area-inset-top)] sm:gap-3 sm:px-4">
       <button
         type="button"
         onClick={onMenu}
@@ -97,7 +97,7 @@ export function Topbar({ title }: { title?: string }) {
           type="search"
           aria-label="Buscar"
           placeholder="Buscar…"
-          className="h-10 w-full rounded-lg border border-border bg-muted pr-3 pl-9 text-sm text-fg outline-none placeholder:text-fg-muted focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+          className="h-10 w-full rounded-lg border border-border bg-muted pr-3 pl-9 text-sm text-fg outline-none placeholder:text-fg-muted focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-sidebar)]"
         />
       </div>
 
@@ -110,7 +110,7 @@ export function Topbar({ title }: { title?: string }) {
         <BellIcon />
         <span
           aria-hidden
-          className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-surface"
+          className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-sidebar"
         />
       </button>
 

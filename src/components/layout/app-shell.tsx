@@ -54,7 +54,7 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
       {/* Desktop rail */}
       <aside
         className={[
-          "hidden shrink-0 border-r border-[var(--border-chrome)] bg-sidebar transition-[width] lg:block",
+          "hidden shrink-0 border-r border-border bg-sidebar transition-[width] lg:block",
           sidebarCollapsed ? "w-16" : "w-64",
         ].join(" ")}
       >
@@ -77,7 +77,7 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
         tabIndex={-1}
         inert={!sidebarOpen}
         className={[
-          "fixed inset-y-0 left-0 z-50 w-72 border-r border-[var(--border-chrome)] bg-sidebar transition-transform outline-none lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-sidebar transition-transform outline-none lg:hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >

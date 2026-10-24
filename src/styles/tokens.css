@@ -163,11 +163,11 @@
      clearly stepped so the admin dashboard has depth and hierarchy. */
   --bg-app: var(--slate-950);
   --bg-surface: var(--slate-800);
-  --bg-sidebar: var(--slate-800); /* nav surface — matches surface/topbar (unified chrome) */
+  --bg-sidebar: var(--slate-900); /* nav surface — one step darker than the topbar */
   --bg-muted: var(--slate-700);
   --border: var(--slate-600);
   --border-strong: var(--slate-500);
-  --border-chrome: var(--bg-surface); /* dark: blends into the chrome — no visible seam */
+  --border-chrome: var(--bg-sidebar); /* dark: blends into the chrome — no visible seam */
   --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
   --text: #eef2f8;
@@ -205,11 +205,11 @@
   :root:not([data-theme="light"]) {
     --bg-app: var(--slate-950);
     --bg-surface: var(--slate-800);
-    --bg-sidebar: var(--slate-800); /* nav surface — matches surface/topbar (unified chrome) */
+    --bg-sidebar: var(--slate-900); /* nav surface — one step darker than the topbar */
     --bg-muted: var(--slate-700);
     --border: var(--slate-600);
     --border-strong: var(--slate-500);
-    --border-chrome: var(--bg-surface); /* dark: blends into the chrome — no visible seam */
+    --border-chrome: var(--bg-sidebar); /* dark: blends into the chrome — no visible seam */
     --overlay: rgba(3, 7, 14, 0.6); /* modal/drawer scrim */
 
     --text: #eef2f8;
